@@ -6,7 +6,8 @@ scalaVersion := "2.11.7"
 
 // Compile dependencies
 libraryDependencies ++= Seq(
-  "org.apache.hadoop" % "hadoop-client" % "2.6.0" exclude("javax.servlet", "servlet-api") force()
+  "org.glassfish.jersey.containers" % "jersey-container-servlet" % "2.25.1",
+  "org.glassfish.jersey.containers" % "jersey-container-grizzly2-http" % "2.25.1"
 )
 
 // Test dependencies
@@ -30,16 +31,21 @@ test in assembly := {}
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
 
 assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", "services", xs @ _*) => MergeStrategy.first
+  // Exclude all static content from dependencies
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first
-  case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.discard
-  case PathList(ps @ _*) if ps.last endsWith ".xml" => MergeStrategy.discard
-  case PathList(ps @ _*) if ps.last endsWith ".properties" => MergeStrategy.discard
-  case PathList(ps @ _*) if ps.last endsWith ".dtd" => MergeStrategy.discard
-  case PathList(ps @ _*) if ps.last.toUpperCase startsWith "LICENSE_" => MergeStrategy.discard
-  case PathList(ps @ _*) if ps.last.toUpperCase startsWith "NOTICE_" => MergeStrategy.discard
-  case PathList(ps @ _*) if ps.last.toUpperCase startsWith "README_" => MergeStrategy.discard
-  case other => MergeStrategy.first
+  case PathList(ps @ _*) if ps.last.endsWith(".html") => MergeStrategy.discard
+  case PathList(ps @ _*) if ps.exists(_ == "assets") => MergeStrategy.discard
+  case PathList(ps @ _*) if ps.exists(_ == "webapps") => MergeStrategy.discard
+  // Exclude any contribs, licences, notices, readme from dependencies
+  case PathList("contribs", xs @ _*) => MergeStrategy.discard
+  case PathList("license", xs @ _*) => MergeStrategy.discard
+  case PathList(ps @ _*) if ps.last.toUpperCase.startsWith("LICENSE") => MergeStrategy.discard
+  case PathList(ps @ _*) if ps.last.toUpperCase.startsWith("NOTICE") => MergeStrategy.discard
+  case PathList(ps @ _*) if ps.last.toUpperCase.startsWith("README_") => MergeStrategy.discard
+  case other =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(other)
 }
 
 coverageHighlighting := {
