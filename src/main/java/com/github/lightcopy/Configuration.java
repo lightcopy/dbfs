@@ -23,9 +23,9 @@ public class Configuration {
   public static final int HTTP_PORT_DEFAULT = 8080;
   public static final String HTTP_SCHEME = "http";
   // HDFS settings (host, port)
-  public static final String HDFS_HOST = "hdfs.host";
+  public static final String HDFS_HOST_KEY = "hdfs.host";
   public static final String HDFS_HOST_DEFAULT = "localhost";
-  public static final String HDFS_PORT = "hdfs.port";
+  public static final String HDFS_PORT_KEY = "hdfs.port";
   public static final int HDFS_PORT_DEFAULT = 8020;
 
   // Keep all keys above registered in the set, used to extract relevant entries from properties
@@ -33,6 +33,8 @@ public class Configuration {
   static {
     REGISTERED_KEYS.add(HTTP_HOST_KEY);
     REGISTERED_KEYS.add(HTTP_PORT_KEY);
+    REGISTERED_KEYS.add(HDFS_HOST_KEY);
+    REGISTERED_KEYS.add(HDFS_PORT_KEY);
   }
 
   private ConcurrentHashMap<String, String> options;
@@ -147,10 +149,10 @@ public class Configuration {
   }
 
   public String hdfsHost() {
-    return get(HDFS_HOST, HDFS_HOST_DEFAULT);
+    return get(HDFS_HOST_KEY, HDFS_HOST_DEFAULT);
   }
 
   public int hdfsPort() {
-    return getInt(HDFS_PORT, HDFS_PORT_DEFAULT);
+    return getInt(HDFS_PORT_KEY, HDFS_PORT_DEFAULT);
   }
 }
