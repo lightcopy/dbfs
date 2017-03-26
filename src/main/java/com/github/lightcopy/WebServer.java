@@ -22,17 +22,12 @@ import org.slf4j.LoggerFactory;
 public class WebServer {
   private static Logger LOG = LoggerFactory.getLogger(WebServer.class);
 
-  public static final String HTTP_HOST_KEY = "hdfs.ui.host";
-  public static final String HTTP_PORT_KEY = "hdfs.ui.port";
-  public static final String HTTP_HOST_DEFAULT = "0.0.0.0";
-  public static final int HTTP_PORT_DEFAULT = 8080;
-  public static final String HTTP_SCHEME = "http";
-
   private final String scheme;
   private final String host;
   private final int port;
   private final HttpServer server;
   private ArrayList<Runnable> events;
+  private Configuration conf;
 
   /**
    * Application context.
@@ -67,28 +62,13 @@ public class WebServer {
   }
 
   public WebServer(Properties props) {
-    this.scheme = HTTP_SCHEME;
-    this.host = strOpt(props, HTTP_HOST_KEY, HTTP_HOST_DEFAULT);
-    this.port = intOpt(props, HTTP_PORT_KEY, HTTP_PORT_DEFAULT);
+    this.conf = new Configuration(props);
+    this.scheme = this.conf.scheme();
+    this.host = this.conf.httpHost();
+    this.port = this.conf.httpPort();
     // initialize events list and internal server
     this.events = new ArrayList<Runnable>();
     this.server = createHttpServer();
-  }
-
-  /** Extract string property with default value */
-  protected String strOpt(Properties props, String key, String def) {
-    return props.getProperty(key, def);
-  }
-
-  /** Extract integer property with default value */
-  protected int intOpt(Properties props, String key, int def) {
-    String value = props.getProperty(key);
-    if (value == null) return def;
-    try {
-      return Integer.parseInt(value);
-    } catch (NumberFormatException err) {
-      throw new RuntimeException("Failed to parse value " + value + " for key " + key, err);
-    }
   }
 
   /** Create endpoint uri from initialized properties */
