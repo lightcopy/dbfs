@@ -3,6 +3,7 @@ package com.github.lightcopy;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -39,7 +40,7 @@ public class WebServer {
    */
   static class ApplicationContext extends ResourceConfig {
     public ApplicationContext() {
-      register(HelloWorldResource.class);
+      register(ContextProvider.class);
       property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
     }
   }
@@ -65,16 +66,33 @@ public class WebServer {
     }
   }
 
-  public WebServer(String host, int port) {
+  public WebServer(Properties props) {
     this.scheme = HTTP_SCHEME;
-    this.host = host;
-    this.port = port;
+    this.host = strOpt(props, HTTP_HOST_KEY, HTTP_HOST_DEFAULT);
+    this.port = intOpt(props, HTTP_PORT_KEY, HTTP_PORT_DEFAULT);
+    // initialize events list and internal server
     this.events = new ArrayList<Runnable>();
     this.server = createHttpServer();
   }
 
+  /** Extract string property with default value */
+  protected String strOpt(Properties props, String key, String def) {
+    return props.getProperty(key, def);
+  }
+
+  /** Extract integer property with default value */
+  protected int intOpt(Properties props, String key, int def) {
+    String value = props.getProperty(key);
+    if (value == null) return def;
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException err) {
+      throw new RuntimeException("Failed to parse value " + value + " for key " + key, err);
+    }
+  }
+
   /** Create endpoint uri from initialized properties */
-  private URI createEndpoint() {
+  protected URI createEndpoint() {
     return UriBuilder.fromPath("")
       .scheme(this.scheme)
       .host(this.host)
@@ -83,7 +101,7 @@ public class WebServer {
   }
 
   /** Create http server from initialized properties */
-  private HttpServer createHttpServer() {
+  protected HttpServer createHttpServer() {
     URI endpoint = createEndpoint();
     ApplicationContext context = new ApplicationContext();
     return GrizzlyHttpServerFactory.createHttpServer(endpoint, context);
@@ -139,7 +157,7 @@ public class WebServer {
   public static void main(String[] args) {
     try {
       LOG.info("Initialize web server");
-      WebServer server = new WebServer(HTTP_HOST_DEFAULT, HTTP_PORT_DEFAULT);
+      WebServer server = new WebServer(System.getProperties());
       LOG.info("Created web server {}", server);
       server.launch();
     } catch (Exception err) {
