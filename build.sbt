@@ -7,7 +7,9 @@ scalaVersion := "2.11.7"
 // Compile dependencies
 libraryDependencies ++= Seq(
   "org.glassfish.jersey.containers" % "jersey-container-servlet" % "2.25.1",
-  "org.glassfish.jersey.containers" % "jersey-container-grizzly2-http" % "2.25.1"
+  "org.glassfish.jersey.containers" % "jersey-container-grizzly2-http" % "2.25.1",
+  "org.slf4j" % "slf4j-api" % "1.7.25",
+  "org.slf4j" % "slf4j-log4j12" % "1.7.25"
 )
 
 // Test dependencies
