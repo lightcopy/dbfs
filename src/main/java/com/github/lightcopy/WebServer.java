@@ -15,6 +15,8 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.lightcopy.conf.AppConf;
+
 /**
  * Main entrypoint to launch web server. Provides basic application context for providers.
  * Providers must be registered manually without web.xml.
@@ -27,7 +29,7 @@ public class WebServer {
   private final int port;
   private final HttpServer server;
   private ArrayList<Runnable> events;
-  private Configuration conf;
+  private AppConf conf;
 
   /**
    * Application context.
@@ -62,7 +64,7 @@ public class WebServer {
   }
 
   public WebServer(Properties props) {
-    this.conf = new Configuration(props);
+    this.conf = new AppConf(props);
     this.scheme = this.conf.scheme();
     this.host = this.conf.httpHost();
     this.port = this.conf.httpPort();

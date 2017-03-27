@@ -1,4 +1,7 @@
-package com.github.lightcopy;
+package com.github.lightcopy.conf;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import java.util.HashSet;
 import java.util.Properties;
@@ -12,8 +15,8 @@ import org.slf4j.LoggerFactory;
  * non-null keys and values are allowed. All keys and values are trimmed to remove whitespaces. When
  * fetching with default value, exception is not propagated, but default value is returned instead.
  */
-public class Configuration {
-  private static Logger LOG = LoggerFactory.getLogger(Configuration.class);
+public class AppConf {
+  private static Logger LOG = LoggerFactory.getLogger(AppConf.class);
 
   // Available options and default parameters
   // Web server settings (host, port, scheme)
@@ -39,7 +42,7 @@ public class Configuration {
 
   private ConcurrentHashMap<String, String> options;
 
-  public Configuration(Properties props) {
+  public AppConf(Properties props) {
     this.options = new ConcurrentHashMap<String, String>();
     for (String key : props.stringPropertyNames()) {
       if (REGISTERED_KEYS.contains(key)) {
@@ -50,7 +53,7 @@ public class Configuration {
     }
   }
 
-  public Configuration() {
+  public AppConf() {
     this(new Properties());
   }
 
@@ -154,5 +157,14 @@ public class Configuration {
 
   public int hdfsPort() {
     return getInt(HDFS_PORT_KEY, HDFS_PORT_DEFAULT);
+  }
+
+  public URI hdfsURI() {
+    try {
+      return new URI("hdfs://" + hdfsHost() + ":" + hdfsPort());
+    } catch (URISyntaxException use) {
+      LOG.warn("Failed to construct HDFS URI", use);
+      return null;
+    }
   }
 }
