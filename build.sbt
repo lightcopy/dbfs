@@ -25,7 +25,9 @@ libraryDependencies ++= Seq(
     exclude("org.mortbay.jetty", "jetty").
     exclude("org.mortbay.jetty", "jetty").
     exclude("org.mortbay.jetty", "jetty-util").
-    exclude("org.mortbay.jetty", "servlet-api")
+    exclude("org.mortbay.jetty", "servlet-api"),
+  // MongoDB dependencies
+  "org.mongodb" % "mongodb-driver" % "3.2.2"
 )
 
 // Test dependencies
