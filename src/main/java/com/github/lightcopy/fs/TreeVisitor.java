@@ -31,5 +31,5 @@ public interface TreeVisitor {
    * Process current directory after all children for this level have been processed. For example,
    * implementation might provide saving collected information into some sink.
    */
-  public void visitAfter(FileStatus root);
+  public void visitAfter();
 }

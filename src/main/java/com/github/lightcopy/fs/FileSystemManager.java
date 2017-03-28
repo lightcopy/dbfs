@@ -79,7 +79,7 @@ public abstract class FileSystemManager {
           }
         }
       }
-      visitor.visitAfter(root);
+      visitor.visitAfter();
     }
   }
 }
