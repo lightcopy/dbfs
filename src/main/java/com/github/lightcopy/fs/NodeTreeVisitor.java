@@ -79,7 +79,7 @@ public class NodeTreeVisitor implements TreeVisitor {
   public void visitAfter() {
     // store updated children
     for (INode child : this.children) {
-      collection.replaceOne(Filters.eq(INode.UUID_COLUMN, child.getId()), child.toDocument());
+      collection.replaceOne(Filters.eq(INode.ID, child.getId()), child.toDocument());
     }
     // insert all leaves
     ArrayList<Document> leafDocs = new ArrayList<Document>(this.leaves.size());
@@ -89,5 +89,8 @@ public class NodeTreeVisitor implements TreeVisitor {
     collection.insertMany(leafDocs);
     // insert current node
     collection.insertOne(this.current.toDocument());
+    // clear all children and leaves
+    this.leaves = null;
+    this.children = null;
   }
 }

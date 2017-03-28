@@ -2,12 +2,20 @@ package com.github.lightcopy.fs;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 
+import org.bson.Document;
+
 /**
  * Represents all access properties for the inode, including permissions, owner and group.
  */
 public class INodeAccess {
-  private String group;
+  // Columns for document, must be unique
+  public static final String OWNER = "owner";
+  public static final String GROUP = "group";
+  public static final String PERMISSION = "permission";
+  public static final String MASK = "mask";
+
   private String owner;
+  private String group;
   // permission should be consistent with permissionMask
   private String permission;
   private short permissionMask;
@@ -42,5 +50,13 @@ public class INodeAccess {
 
   public short getPermissionMask() {
     return this.permissionMask;
+  }
+
+  public Document toDocument() {
+    return new Document()
+      .append(OWNER, getOwner())
+      .append(GROUP, getGroup())
+      .append(PERMISSION, getPermission())
+      .append(MASK, getPermissionMask());
   }
 }

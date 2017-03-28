@@ -74,7 +74,18 @@ public abstract class INode {
     }
   }
 
-  public static final String UUID_COLUMN = "uuid";
+  // Columns of Document instance, must all be unique
+  public static final String ID = "uuid";
+  public static final String ACCESS_TIME = "accessTime";
+  public static final String MODIFICATION_TIME  = "modificationTime";
+  public static final String SIZE_BYTES = "sizeBytes";
+  public static final String DISK_USAGE_BYTES = "diskUsageBytes";
+  public static final String BLOCK_SIZE_BYTES = "blockSizeBytes";
+  public static final String REPLICATION_FACTOR = "replicationFactor";
+  public static final String ACCESS = "access";
+  public static final String NAME = "name";
+  public static final String PARENT = "parent";
+  public static final String TYPE = "type";
 
   /** Generate random id for inode (for insertion only) */
   private static String nextUUID() {
@@ -171,12 +182,28 @@ public abstract class INode {
     return this.parent;
   }
 
+  /** Return parent id if set, otherwise return null */
+  public String getParentId() {
+    return (this.parent != null) ? this.parent.getId() : null;
+  }
+
   public INodeType getType() {
     return this.tpe;
   }
 
   /** Convert inode into Mongo document specification by using columns defined above */
   public Document toDocument() {
-    return null;
+    return new Document()
+      .append(ID, getId())
+      .append(ACCESS_TIME, getAccessTime())
+      .append(MODIFICATION_TIME, getModificationTime())
+      .append(SIZE_BYTES, getSize())
+      .append(DISK_USAGE_BYTES, getDiskUsage())
+      .append(BLOCK_SIZE_BYTES, getBlockSize())
+      .append(REPLICATION_FACTOR, getReplicationFactor())
+      .append(ACCESS, getAccessInfo().toDocument())
+      .append(NAME, getName())
+      .append(PARENT, getParentId())
+      .append(TYPE, getType().getName());
   }
 }
