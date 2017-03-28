@@ -16,8 +16,6 @@ public class NodeTreeVisitor implements TreeVisitor {
   private final MongoCollection<Document> collection;
   // leaf nodes that can be inserted directly
   private ArrayList<INode> leaves;
-  // child nodes that have already been inserted but require updates
-  private ArrayList<INode> children;
   // current inode
   private INode current;
 
@@ -25,27 +23,28 @@ public class NodeTreeVisitor implements TreeVisitor {
     this.collection = collection;
     this.current = null;
     this.leaves = new ArrayList<INode>();
-    this.children = new ArrayList<INode>();
   }
 
   protected INode getCurrent() {
     return this.current;
   }
 
-  /** Logic to update both current node as well as provided child node */
-  private void updateParentChild(INode child) {
-    child.setParent(this.current);
+  /**
+   * Logic to update current node based on provided child node.
+   * Provided child node should be treated as readonly.
+   */
+  private void updateCurrent(INode child) {
     this.current.addDiskUsage(child.getDiskUsage());
   }
 
   /** Convert file status into INode */
   private INode statusToNode(FileStatus root) {
     if (root.isDirectory()) {
-      return new DirectoryNode(root);
+      return new INode(root, INodeType.DIRECTORY);
     } else if (root.isFile()) {
-      return new FileNode(root);
+      return new INode(root, INodeType.FILE);
     } else if (root.isSymlink()) {
-      return new SymlinkNode(root);
+      return new INode(root, INodeType.SYMLINK);
     } else {
       throw new UnsupportedOperationException("Unknown " + root);
     }
@@ -59,7 +58,7 @@ public class NodeTreeVisitor implements TreeVisitor {
   @Override
   public void visitChild(FileStatus child) {
     INode leaf = statusToNode(child);
-    updateParentChild(leaf);
+    updateCurrent(leaf);
     this.leaves.add(leaf);
   }
 
@@ -67,20 +66,14 @@ public class NodeTreeVisitor implements TreeVisitor {
   public void visitChild(TreeVisitor visitor) {
     if (visitor instanceof NodeTreeVisitor) {
       NodeTreeVisitor nodeVisitor = (NodeTreeVisitor) visitor;
-      // make parent-child updates for current visitor, because root of visitor is not passed
-      // into visitChild(FileStatus), do not add root of visitor into children list
+      // make parent <- child updates for current visitor
       INode child = nodeVisitor.getCurrent();
-      updateParentChild(child);
-      this.children.add(child);
+      updateCurrent(child);
     }
   }
 
   @Override
   public void visitAfter() {
-    // store updated children
-    for (INode child : this.children) {
-      collection.replaceOne(Filters.eq(INode.ID, child.getId()), child.toDocument());
-    }
     // insert all leaves
     ArrayList<Document> leafDocs = new ArrayList<Document>(this.leaves.size());
     for (INode leaf : this.leaves) {
@@ -91,6 +84,5 @@ public class NodeTreeVisitor implements TreeVisitor {
     collection.insertOne(this.current.toDocument());
     // clear all children and leaves
     this.leaves = null;
-    this.children = null;
   }
 }

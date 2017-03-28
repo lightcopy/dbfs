@@ -7,85 +7,25 @@ import org.apache.hadoop.fs.Path;
 
 import org.bson.Document;
 
+import com.github.lightcopy.mongo.DocumentLike;
+
 /**
- * Abstract class that represents node of the file system.
+ * [[INode]] represents node of the file system.
  */
-public abstract class INode {
-  /**
-   * [[INodeType]] class represents type of the nodes in file system. For example, generally types
-   * are: directory, file, and symlink.
-   */
-  public static abstract class INodeType {
-    /** Unique name of the type */
-    public abstract String getName();
-
-    /** Whether or not such node is leaf node, and does not allow children nodes */
-    public abstract boolean isLeafNode();
-
-    @Override
-    public boolean equals(Object other) {
-      if (other == null || !(other instanceof INodeType)) return false;
-      INodeType tpe = (INodeType) other;
-      return tpe.getName().equals(getName());
-    }
-
-    @Override
-    public String toString() {
-      return getName();
-    }
-  }
-
-  /** Type for directory inode */
-  public static class DirectoryType extends INodeType {
-    @Override
-    public String getName() {
-      return "DIRECTORY";
-    }
-
-    @Override
-    public boolean isLeafNode() {
-      return true;
-    }
-  }
-
-  /** Type for file inode */
-  public static class FileType extends INodeType {
-    @Override
-    public String getName() {
-      return "FILE";
-    }
-
-    @Override
-    public boolean isLeafNode() {
-      return false;
-    }
-  }
-
-  /** Type for symlink inode */
-  public static class SymlinkType extends INodeType {
-    @Override
-    public String getName() {
-      return "SYMLINK";
-    }
-
-    @Override
-    public boolean isLeafNode() {
-      return false;
-    }
-  }
-
+public class INode implements DocumentLike<INode> {
   // Columns of Document instance, must all be unique
-  public static final String ID = "uuid";
-  public static final String ACCESS_TIME = "accessTime";
-  public static final String MODIFICATION_TIME  = "modificationTime";
-  public static final String SIZE_BYTES = "sizeBytes";
-  public static final String DISK_USAGE_BYTES = "diskUsageBytes";
-  public static final String BLOCK_SIZE_BYTES = "blockSizeBytes";
-  public static final String REPLICATION_FACTOR = "replicationFactor";
-  public static final String ACCESS = "access";
-  public static final String NAME = "name";
-  public static final String PARENT = "parent";
-  public static final String TYPE = "type";
+  public static final String FIELD_UUID = "uuid";
+  public static final String FIELD_ACCESS_TIME = "accessTime";
+  public static final String FIELD_MODIFICATION_TIME  = "modificationTime";
+  public static final String FIELD_SIZE_BYTES = "sizeBytes";
+  public static final String FIELD_DISK_USAGE_BYTES = "diskUsageBytes";
+  public static final String FIELD_BLOCK_SIZE_BYTES = "blockSizeBytes";
+  public static final String FIELD_REPLICATION_FACTOR = "replicationFactor";
+  public static final String FIELD_ACCESS = "access";
+  public static final String FIELD_NAME = "name";
+  public static final String FIELD_PARENT = "parent";
+  public static final String FIELD_TYPE = "type";
+  public static final String FIELD_PATH = "path";
 
   /** Generate random id for inode (for insertion only) */
   private static String nextUUID() {
@@ -101,15 +41,15 @@ public abstract class INode {
   private long sizeBytes;
   private long diskUsageBytes;
   private long blockSizeBytes;
-  private short replicationFactor;
+  private int replicationFactor;
   // inode access
   private INodeAccess access;
   // inode name
   private String name;
-  // inode parent, can be null if path is root directory
-  private INode parent;
   // inode type
   private INodeType tpe;
+  // inode fs path
+  private INodePath path;
 
   public INode(FileStatus status, INodeType tpe) {
     this.uuid = nextUUID();
@@ -126,11 +66,11 @@ public abstract class INode {
     // parse path
     this.name = status.getPath().getName();
     this.tpe = tpe;
+    this.path = new INodePath(status.getPath());
   }
 
-  public void setParent(INode parent) {
-    this.parent = parent;
-  }
+  /** Constructor to create from Document */
+  public INode() { }
 
   public void setDiskUsage(long bytes) {
     if (bytes < 0) throw new IllegalArgumentException("Negative bytes " + bytes + "in disk usage");
@@ -142,7 +82,7 @@ public abstract class INode {
     setDiskUsage(this.diskUsageBytes + bytes);
   }
 
-  public String getId() {
+  public String getUUID() {
     return this.uuid;
   }
 
@@ -166,7 +106,7 @@ public abstract class INode {
     return this.blockSizeBytes;
   }
 
-  public short getReplicationFactor() {
+  public int getReplicationFactor() {
     return this.replicationFactor;
   }
 
@@ -178,32 +118,48 @@ public abstract class INode {
     return this.name;
   }
 
-  public INode getParent() {
-    return this.parent;
-  }
-
-  /** Return parent id if set, otherwise return null */
-  public String getParentId() {
-    return (this.parent != null) ? this.parent.getId() : null;
-  }
-
   public INodeType getType() {
     return this.tpe;
   }
 
-  /** Convert inode into Mongo document specification by using columns defined above */
+  /** Return type as string */
+  public String getTypeName() {
+    return this.tpe.name();
+  }
+
+  public INodePath getPath() {
+    return this.path;
+  }
+
+  @Override
   public Document toDocument() {
     return new Document()
-      .append(ID, getId())
-      .append(ACCESS_TIME, getAccessTime())
-      .append(MODIFICATION_TIME, getModificationTime())
-      .append(SIZE_BYTES, getSize())
-      .append(DISK_USAGE_BYTES, getDiskUsage())
-      .append(BLOCK_SIZE_BYTES, getBlockSize())
-      .append(REPLICATION_FACTOR, getReplicationFactor())
-      .append(ACCESS, getAccessInfo().toDocument())
-      .append(NAME, getName())
-      .append(PARENT, getParentId())
-      .append(TYPE, getType().getName());
+      .append(FIELD_UUID, getUUID())
+      .append(FIELD_ACCESS_TIME, getAccessTime())
+      .append(FIELD_MODIFICATION_TIME, getModificationTime())
+      .append(FIELD_SIZE_BYTES, getSize())
+      .append(FIELD_DISK_USAGE_BYTES, getDiskUsage())
+      .append(FIELD_BLOCK_SIZE_BYTES, getBlockSize())
+      .append(FIELD_REPLICATION_FACTOR, getReplicationFactor())
+      .append(FIELD_ACCESS, getAccessInfo().toDocument())
+      .append(FIELD_NAME, getName())
+      .append(FIELD_TYPE, getTypeName())
+      .append(FIELD_PATH, getPath().toDocument());
+  }
+
+  @Override
+  public INode fromDocument(Document doc) {
+    this.uuid = doc.getString(FIELD_UUID);
+    this.accessTime = doc.getLong(FIELD_ACCESS_TIME);
+    this.modificationTime = doc.getLong(FIELD_MODIFICATION_TIME);
+    this.sizeBytes = doc.getLong(FIELD_SIZE_BYTES);
+    this.diskUsageBytes = doc.getLong(FIELD_DISK_USAGE_BYTES);
+    this.blockSizeBytes = doc.getLong(FIELD_BLOCK_SIZE_BYTES);
+    this.replicationFactor = doc.getInteger(FIELD_REPLICATION_FACTOR);
+    this.access = new INodeAccess().fromDocument(doc.get(FIELD_ACCESS, Document.class));
+    this.name = doc.getString(FIELD_NAME);
+    this.tpe = INodeType.valueOf(doc.getString(FIELD_TYPE));
+    this.path = new INodePath().fromDocument(doc.get(FIELD_ACCESS, Document.class));
+    return this;
   }
 }

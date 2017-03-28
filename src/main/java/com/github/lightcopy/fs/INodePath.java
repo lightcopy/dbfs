@@ -31,10 +31,7 @@ public class INodePath implements DocumentLike<INodePath> {
   }
 
   /** Constructor to create from Document */
-  public INodePath() {
-    this.depth = 0;
-    this.elements = null;
-  }
+  public INodePath() { }
 
   protected String[] parse(Path path) {
     int total = path.depth();

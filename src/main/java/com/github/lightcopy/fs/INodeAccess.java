@@ -4,21 +4,20 @@ import org.apache.hadoop.fs.permission.FsPermission;
 
 import org.bson.Document;
 
+import com.github.lightcopy.mongo.DocumentLike;
+
 /**
  * Represents all access properties for the inode, including permissions, owner and group.
  */
-public class INodeAccess {
+public class INodeAccess implements DocumentLike<INodeAccess> {
   // Columns for document, must be unique
-  public static final String OWNER = "owner";
-  public static final String GROUP = "group";
-  public static final String PERMISSION = "permission";
-  public static final String MASK = "mask";
+  public static final String FIELD_OWNER = "owner";
+  public static final String FIELD_GROUP = "group";
+  public static final String FIELD_PERMISSION = "permission";
 
   private String owner;
   private String group;
-  // permission should be consistent with permissionMask
   private String permission;
-  private short permissionMask;
 
   public INodeAccess(String owner, String group, FsPermission perm) {
     if (owner == null) throw new IllegalArgumentException("Owner field is null");
@@ -26,14 +25,16 @@ public class INodeAccess {
     this.owner = owner;
     this.group = group;
     this.permission = perm.toString();
-    this.permissionMask = perm.toShort();
   }
+
+  /** Constructor to create from Document */
+  public INodeAccess() { }
 
   @Override
   public String toString() {
     return "[owner=" + this.owner +
       ", group=" + this.group +
-      ", permission=" + this.permission + "(" + this.permissionMask + ")]";
+      ", permission=" + this.permission + "]";
   }
 
   public String getOwner() {
@@ -48,15 +49,19 @@ public class INodeAccess {
     return this.permission;
   }
 
-  public short getPermissionMask() {
-    return this.permissionMask;
-  }
-
+  @Override
   public Document toDocument() {
     return new Document()
-      .append(OWNER, getOwner())
-      .append(GROUP, getGroup())
-      .append(PERMISSION, getPermission())
-      .append(MASK, getPermissionMask());
+      .append(FIELD_OWNER, getOwner())
+      .append(FIELD_GROUP, getGroup())
+      .append(FIELD_PERMISSION, getPermission());
+  }
+
+  @Override
+  public INodeAccess fromDocument(Document doc) {
+    this.owner = doc.getString(FIELD_OWNER);
+    this.group = doc.getString(FIELD_GROUP);
+    this.permission = doc.getString(FIELD_PERMISSION);
+    return this;
   }
 }
