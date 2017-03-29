@@ -12,6 +12,11 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.bson.Document;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+
 import com.github.lightcopy.conf.AppConf;
 
 /**
@@ -20,22 +25,30 @@ import com.github.lightcopy.conf.AppConf;
 public class HdfsManager extends FileSystemManager {
   private static Logger LOG = LoggerFactory.getLogger(HdfsManager.class);
 
+  public static final String MONGO_DATABASE = "dbfs_db";
+  public static final String MONGO_FS = "fs";
+
   private HdfsAdmin admin;
   private FileSystem fs;
+  private MongoClient mongo;
   private Path root;
   private DFSInotifyEventInputStream eventStream;
   private Thread eventProcessingThread;
 
   public HdfsManager(AppConf conf) {
-    this(conf.hdfsURI(), new Path("/"));
+    this(conf.hdfsURI(), new Path("/"), conf.mongoConnectionString());
   }
 
-  public HdfsManager(URI hdfsURI, Path root) {
+  public HdfsManager(URI hdfsURI, Path root, String mongoConnection) {
     try {
       LOG.info("Initialize hdfs manager with uri {}", hdfsURI);
       Configuration hadoopConfiguration = new Configuration(false);
       this.admin = new HdfsAdmin(hdfsURI, hadoopConfiguration);
+      LOG.info("Initialize file system for uri {}", hdfsURI);
       this.fs = FileSystem.get(hdfsURI, hadoopConfiguration);
+      LOG.info("Initialize mongo client for connection {}", mongoConnection);
+      this.mongo = new MongoClient(new MongoClientURI(mongoConnection));
+      LOG.info("Set root path as {}", root);
       this.root = root;
     } catch (IOException ioe) {
       String msg = "Failed to initialize hdfs manager";
@@ -44,10 +57,30 @@ public class HdfsManager extends FileSystemManager {
     }
   }
 
+  /** Get collection for mongo file system */
+  private MongoCollection<Document> mongoFileSystem() {
+    return this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_FS);
+  }
+
+  private void cleanupState() {
+    // delete database if exists
+    LOG.info("Delete Mongo database {}", MONGO_DATABASE);
+    this.mongo.getDatabase(MONGO_DATABASE).drop();
+  }
+
+  private void startEventProcessing() {
+    // TODO: implement start of the processing thread
+    LOG.warn("Event processing is not implemented");
+  }
+
+  private void stopEventProcessing() {
+    // TODO: implement shutdown of the processing thread
+    LOG.warn("Event processing is not implemented");
+  }
+
   @Override
   public TreeVisitor prepareTreeVisitor() {
-    // TODO: implement tree visitor
-    return null;
+    return new NodeTreeVisitor(mongoFileSystem());
   }
 
   @Override
@@ -81,7 +114,7 @@ public class HdfsManager extends FileSystemManager {
       throw new RuntimeException(msg, ioe);
     }
     long endTime = System.nanoTime();
-    LOG.info("Started in {} ms", (endTime - startTime) / 1e-6);
+    LOG.info("Started in {} ms", (endTime - startTime) / 1e6);
   }
 
   @Override
@@ -91,19 +124,12 @@ public class HdfsManager extends FileSystemManager {
     stopEventProcessing();
     // it does not seem like you can close event stream
     this.eventStream = null;
+    // reset hdfs admin
+    this.admin = null;
+    // close mongodb
+    this.mongo.close();
+    this.mongo = null;
     long endTime = System.nanoTime();
-    LOG.info("Stopped in {} ms", (endTime - startTime) / 1e-6);
-  }
-
-  private void cleanupState() {
-    // TODO: implement cleanup state
-  }
-
-  private void startEventProcessing() {
-    // TODO: implement start of the processing thread
-  }
-
-  private void stopEventProcessing() {
-    // TODO: implement shutdown of the processing thread
+    LOG.info("Stopped in {} ms", (endTime - startTime) / 1e6);
   }
 }

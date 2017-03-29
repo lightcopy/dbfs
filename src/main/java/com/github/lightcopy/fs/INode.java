@@ -159,7 +159,7 @@ public class INode implements DocumentLike<INode> {
     this.access = new INodeAccess().fromDocument(doc.get(FIELD_ACCESS, Document.class));
     this.name = doc.getString(FIELD_NAME);
     this.tpe = INodeType.valueOf(doc.getString(FIELD_TYPE));
-    this.path = new INodePath().fromDocument(doc.get(FIELD_ACCESS, Document.class));
+    this.path = new INodePath().fromDocument(doc.get(FIELD_PATH, Document.class));
     return this;
   }
 }

@@ -74,12 +74,14 @@ public class NodeTreeVisitor implements TreeVisitor {
 
   @Override
   public void visitAfter() {
-    // insert all leaves
-    ArrayList<Document> leafDocs = new ArrayList<Document>(this.leaves.size());
-    for (INode leaf : this.leaves) {
-      leafDocs.add(leaf.toDocument());
+    // insert leaves, if any exists, Mongo does not allow to insert empty lists
+    if (this.leaves.size() > 0) {
+      ArrayList<Document> leafDocs = new ArrayList<Document>(this.leaves.size());
+      for (INode leaf : this.leaves) {
+        leafDocs.add(leaf.toDocument());
+      }
+      collection.insertMany(leafDocs);
     }
-    collection.insertMany(leafDocs);
     // insert current node
     collection.insertOne(this.current.toDocument());
     // clear all children and leaves

@@ -82,4 +82,9 @@ public abstract class FileSystemManager {
       visitor.visitAfter();
     }
   }
+
+  @Override
+  public String toString() {
+    return "[fs=" + getFileSystem() + ", root=" + getRoot() + "]";
+  }
 }

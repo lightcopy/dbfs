@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.lightcopy.conf.AppConf;
+import com.github.lightcopy.fs.HdfsManager;
 
 /**
  * Main entrypoint to launch web server. Provides basic application context for providers.
@@ -30,6 +31,7 @@ public class WebServer {
   private final HttpServer server;
   private ArrayList<Runnable> events;
   private AppConf conf;
+  private HdfsManager manager;
 
   /**
    * Application context.
@@ -63,6 +65,29 @@ public class WebServer {
     }
   }
 
+  /**
+   * Shutdown hook to HdfsManager.
+   */
+  static class HdfsManagerShutdown implements Runnable {
+    private final HdfsManager manager;
+
+    HdfsManagerShutdown(HdfsManager manager) {
+      this.manager = manager;
+    }
+
+    @Override
+    public void run() {
+      if (this.manager != null) {
+        this.manager.stop();
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "HdfsManagerShutdown" + this.manager;
+    }
+  }
+
   public WebServer(Properties props) {
     this.conf = new AppConf(props);
     this.scheme = this.conf.scheme();
@@ -71,6 +96,8 @@ public class WebServer {
     // initialize events list and internal server
     this.events = new ArrayList<Runnable>();
     this.server = createHttpServer();
+    this.manager = new HdfsManager(this.conf);
+    registerShutdownHook(new HdfsManagerShutdown(this.manager));
   }
 
   /** Create endpoint uri from initialized properties */
@@ -129,6 +156,7 @@ public class WebServer {
     }
     LOG.info("Start server {}", this);
     this.server.start();
+    this.manager.start();
   }
 
   @Override
@@ -144,6 +172,7 @@ public class WebServer {
       server.launch();
     } catch (Exception err) {
       LOG.error("Exception occuried", err);
+      System.exit(1);
     }
   }
 }

@@ -84,6 +84,13 @@ public class INodePath implements DocumentLike<INodePath> {
     this.depth = doc.getInteger(FIELD_DEPTH);
     for (int i = 0; i < MAX_DEPTH; i++) {
       this.elements[i] = doc.getString(fieldName(i));
+      if (i < this.depth && this.elements[i] == null) {
+        throw new RuntimeException("Path element is null for depth " + this.depth +
+          " and document " + doc);
+      } else if (i >= this.depth && this.elements[i] != null) {
+        throw new RuntimeException("Inconsistent state for the path with depth " + this.depth +
+          " and document " + doc);
+      }
     }
     return this;
   }

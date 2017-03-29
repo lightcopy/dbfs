@@ -25,19 +25,20 @@ public class AppConf {
   public static final String HTTP_PORT_KEY = "http.port";
   public static final int HTTP_PORT_DEFAULT = 8080;
   public static final String HTTP_SCHEME = "http";
-  // HDFS settings (host, port)
-  public static final String HDFS_HOST_KEY = "hdfs.host";
-  public static final String HDFS_HOST_DEFAULT = "localhost";
-  public static final String HDFS_PORT_KEY = "hdfs.port";
-  public static final int HDFS_PORT_DEFAULT = 8020;
+  // HDFS settings (connection string)
+  public static final String HDFS_CONN_KEY = "hdfs.address";
+  public static final String HDFS_CONN_DEFAULT = "hdfs://localhost:8020";
+  // MongoDB settings (connection string)
+  public static final String MONGO_CONN_KEY = "mongo.address";
+  public static final String MONGO_CONN_DEFAULT = "mongodb://localhost:27017";
 
   // Keep all keys above registered in the set, used to extract relevant entries from properties
   public static final HashSet<String> REGISTERED_KEYS = new HashSet<String>();
   static {
     REGISTERED_KEYS.add(HTTP_HOST_KEY);
     REGISTERED_KEYS.add(HTTP_PORT_KEY);
-    REGISTERED_KEYS.add(HDFS_HOST_KEY);
-    REGISTERED_KEYS.add(HDFS_PORT_KEY);
+    REGISTERED_KEYS.add(HDFS_CONN_KEY);
+    REGISTERED_KEYS.add(MONGO_CONN_KEY);
   }
 
   private ConcurrentHashMap<String, String> options;
@@ -151,20 +152,20 @@ public class AppConf {
     return HTTP_SCHEME;
   }
 
-  public String hdfsHost() {
-    return get(HDFS_HOST_KEY, HDFS_HOST_DEFAULT);
-  }
-
-  public int hdfsPort() {
-    return getInt(HDFS_PORT_KEY, HDFS_PORT_DEFAULT);
+  public String hdfsConnectionString() {
+    return get(HDFS_CONN_KEY, HDFS_CONN_DEFAULT);
   }
 
   public URI hdfsURI() {
+    String conn = hdfsConnectionString();
     try {
-      return new URI("hdfs://" + hdfsHost() + ":" + hdfsPort());
+      return new URI(conn);
     } catch (URISyntaxException use) {
-      LOG.warn("Failed to construct HDFS URI", use);
-      return null;
+      throw new RuntimeException("Failed to construct HDFS URI from connection " + conn, use);
     }
+  }
+
+  public String mongoConnectionString() {
+    return get(MONGO_CONN_KEY, MONGO_CONN_DEFAULT);
   }
 }
