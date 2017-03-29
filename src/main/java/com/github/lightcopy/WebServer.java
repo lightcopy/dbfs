@@ -23,7 +23,7 @@ import com.github.lightcopy.fs.HdfsManager;
  * Providers must be registered manually without web.xml.
  */
 public class WebServer {
-  private static Logger LOG = LoggerFactory.getLogger(WebServer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WebServer.class);
 
   private final String scheme;
   private final String host;

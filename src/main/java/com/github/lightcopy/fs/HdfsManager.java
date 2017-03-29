@@ -23,7 +23,7 @@ import com.github.lightcopy.conf.AppConf;
  * Implementation of [[FileSystemManager]] for HDFS.
  */
 public class HdfsManager extends FileSystemManager {
-  private static Logger LOG = LoggerFactory.getLogger(HdfsManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsManager.class);
 
   public static final String MONGO_DATABASE = "dbfs_db";
   public static final String MONGO_FS = "fs";
@@ -33,7 +33,8 @@ public class HdfsManager extends FileSystemManager {
   private MongoClient mongo;
   private Path root;
   private DFSInotifyEventInputStream eventStream;
-  private Thread eventProcessingThread;
+  private EventProcess eventProcess;
+  private Thread eventProcessThread;
 
   public HdfsManager(AppConf conf) {
     this(conf.hdfsURI(), new Path("/"), conf.mongoConnectionString());
@@ -44,6 +45,7 @@ public class HdfsManager extends FileSystemManager {
       LOG.info("Initialize hdfs manager with uri {}", hdfsURI);
       Configuration hadoopConfiguration = new Configuration(false);
       this.admin = new HdfsAdmin(hdfsURI, hadoopConfiguration);
+      this.eventStream = this.admin.getInotifyEventStream();
       LOG.info("Initialize file system for uri {}", hdfsURI);
       this.fs = FileSystem.get(hdfsURI, hadoopConfiguration);
       LOG.info("Initialize mongo client for connection {}", mongoConnection);
@@ -69,13 +71,29 @@ public class HdfsManager extends FileSystemManager {
   }
 
   private void startEventProcessing() {
-    // TODO: implement start of the processing thread
-    LOG.warn("Event processing is not implemented");
+    this.eventProcess = new EventProcess(this);
+    this.eventProcessThread = new Thread(this.eventProcess);
+    LOG.info("Start event processing ({})", this.eventProcessThread);
+    this.eventProcessThread.start();
   }
 
   private void stopEventProcessing() {
-    // TODO: implement shutdown of the processing thread
-    LOG.warn("Event processing is not implemented");
+    LOG.info("Stop event processing ({})", this.eventProcessThread);
+    if (this.eventProcessThread != null) {
+      try {
+        this.eventProcess.terminate();
+        this.eventProcessThread.join();
+        // reset properties to null
+        this.eventProcessThread = null;
+        this.eventProcess = null;
+      } catch (InterruptedException err) {
+        throw new RuntimeException("Intrerrupted thread " + this.eventProcessThread, err);
+      }
+    }
+  }
+
+  protected DFSInotifyEventInputStream getEventStream() {
+    return this.eventStream;
   }
 
   @Override
@@ -98,7 +116,6 @@ public class HdfsManager extends FileSystemManager {
     long startTime = System.nanoTime();
     LOG.info("Start hdfs manager");
     try {
-      this.eventStream = this.admin.getInotifyEventStream();
       // cleanup state
       LOG.info("Clean up current state");
       cleanupState();

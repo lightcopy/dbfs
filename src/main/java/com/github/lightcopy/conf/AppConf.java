@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * fetching with default value, exception is not propagated, but default value is returned instead.
  */
 public class AppConf {
-  private static Logger LOG = LoggerFactory.getLogger(AppConf.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AppConf.class);
 
   // Available options and default parameters
   // Web server settings (host, port, scheme)
