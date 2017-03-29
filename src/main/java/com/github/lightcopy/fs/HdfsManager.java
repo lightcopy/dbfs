@@ -26,7 +26,8 @@ public class HdfsManager extends FileSystemManager {
   private static final Logger LOG = LoggerFactory.getLogger(HdfsManager.class);
 
   public static final String MONGO_DATABASE = "dbfs_db";
-  public static final String MONGO_FS = "fs";
+  public static final String MONGO_COLLECTION_FILE_SYSTEM = "file_system";
+  public static final String MONGO_COLLECTION_EVENT_POOL = "event_pool";
 
   private HdfsAdmin admin;
   private FileSystem fs;
@@ -59,9 +60,14 @@ public class HdfsManager extends FileSystemManager {
     }
   }
 
-  /** Get collection for mongo file system */
-  private MongoCollection<Document> mongoFileSystem() {
-    return this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_FS);
+  /** Get mongo collection for file system metadata */
+  protected MongoCollection<Document> mongoFileSystem() {
+    return this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_COLLECTION_FILE_SYSTEM);
+  }
+
+  /** Get mongo collection to store hdfs events */
+  protected MongoCollection<Document> mongoEventPool() {
+    return this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_COLLECTION_EVENT_POOL);
   }
 
   private void cleanupState() {
