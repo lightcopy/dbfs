@@ -1,4 +1,4 @@
-name := "hdfs-ui"
+name := "dbfs"
 
 organization := "com.github.lightcopy"
 
