@@ -143,4 +143,11 @@ public class MongoUtils {
     UpdateResult res = fs.replaceOne(filter, node.toDocument());
     return res.getModifiedCount();
   }
+
+  /**
+   * Insert new node into file system.
+   */
+  public static void insert(MongoCollection<Document> fs, INode node) {
+    fs.insertOne(node.toDocument());
+  }
 }

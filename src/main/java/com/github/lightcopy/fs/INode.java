@@ -91,6 +91,11 @@ public class INode implements DocumentLike<INode> {
     setDiskUsage(this.diskUsageBytes + bytes);
   }
 
+  public void setFileSize(long bytes) {
+    if (bytes < 0) throw new IllegalArgumentException("Negative bytes " + bytes + "in file size");
+    this.sizeBytes = bytes;
+  }
+
   /** Replace prefix srcPath with dstPath */
   public INode replacePrefix(INodePath srcPath, INodePath dstPath) {
     // if node does not have srcPath as prefix, throw exception as we cannot update such path
