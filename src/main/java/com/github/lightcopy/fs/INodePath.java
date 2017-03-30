@@ -11,8 +11,6 @@ import com.github.lightcopy.mongo.DocumentLike;
  * Currently has a limitation on maximum number of levels (depth of the tree).
  */
 public class INodePath implements DocumentLike<INodePath> {
-  // we only have 32 entries paths
-  public static final int MAX_DEPTH = 32;
   // field names for document
   public static final String FIELD_DEPTH = "depth";
   // field name for each path level
@@ -35,11 +33,7 @@ public class INodePath implements DocumentLike<INodePath> {
 
   protected String[] parse(Path path) {
     int total = path.depth();
-    if (total > MAX_DEPTH) {
-      throw new UnsupportedOperationException("Path depth " + total +
-        " is too large, should be less than " + MAX_DEPTH);
-    }
-    String[] elems = new String[MAX_DEPTH];
+    String[] elems = new String[total];
     while (total > 0) {
       elems[--total] = path.getName();
       path = path.getParent();
@@ -71,7 +65,7 @@ public class INodePath implements DocumentLike<INodePath> {
   @Override
   public Document toDocument() {
     Document doc = new Document(FIELD_DEPTH, this.depth);
-    for (int i = 0; i < MAX_DEPTH; i++) {
+    for (int i = 0; i < this.depth; i++) {
       doc.append(fieldName(i), this.elements[i]);
     }
     return doc;
@@ -79,16 +73,12 @@ public class INodePath implements DocumentLike<INodePath> {
 
   @Override
   public INodePath fromDocument(Document doc) {
-    this.elements = new String[MAX_DEPTH];
-    // depth includes all elements that are not null
     this.depth = doc.getInteger(FIELD_DEPTH);
-    for (int i = 0; i < MAX_DEPTH; i++) {
+    this.elements = new String[this.depth];
+    for (int i = 0; i < this.depth; i++) {
       this.elements[i] = doc.getString(fieldName(i));
       if (i < this.depth && this.elements[i] == null) {
         throw new RuntimeException("Path element is null for depth " + this.depth +
-          " and document " + doc);
-      } else if (i >= this.depth && this.elements[i] != null) {
-        throw new RuntimeException("Inconsistent state for the path with depth " + this.depth +
           " and document " + doc);
       }
     }
