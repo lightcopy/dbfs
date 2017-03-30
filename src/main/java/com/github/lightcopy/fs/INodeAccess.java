@@ -20,11 +20,9 @@ public class INodeAccess implements DocumentLike<INodeAccess> {
   private String permission;
 
   public INodeAccess(String owner, String group, FsPermission perm) {
-    if (owner == null) throw new IllegalArgumentException("Owner field is null");
-    if (group == null) throw new IllegalArgumentException("Group field is null");
-    this.owner = owner;
-    this.group = group;
-    this.permission = perm.toString();
+    setOwner(this.owner);
+    setGroup(this.group);
+    setPermission(this.permission);
   }
 
   /** Constructor to create from Document */
@@ -35,6 +33,24 @@ public class INodeAccess implements DocumentLike<INodeAccess> {
     return "[owner=" + this.owner +
       ", group=" + this.group +
       ", permission=" + this.permission + "]";
+  }
+
+  public void setOwner(String value) {
+    if (value == null) throw new IllegalArgumentException("Owner value is null");
+    this.owner = value;
+  }
+
+  public void setGroup(String value) {
+    if (value == null) throw new IllegalArgumentException("Group value is null");
+    this.group = value;
+  }
+
+  public void setPermission(FsPermission perm) {
+    this.permission = perm.toString();
+  }
+
+  public void setPermission(String perm) {
+    this.permission = perm;
   }
 
   public String getOwner() {

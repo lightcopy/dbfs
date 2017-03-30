@@ -51,7 +51,7 @@ public class INode implements DocumentLike<INode> {
   // inode fs path
   private INodePath path;
 
-  public INode(FileStatus status, INodeType tpe) {
+  public INode(FileStatus status) {
     this.uuid = nextUUID();
     this.accessTime = status.getAccessTime();
     this.modificationTime = status.getModificationTime();
@@ -65,7 +65,17 @@ public class INode implements DocumentLike<INode> {
     this.access = new INodeAccess(status.getOwner(), status.getGroup(), status.getPermission());
     // parse path
     this.name = status.getPath().getName();
-    this.tpe = tpe;
+    // select appropriate type for inode
+    if (status.isDirectory()) {
+      this.tpe = INodeType.DIRECTORY;
+    } else if (status.isFile()) {
+      this.tpe = INodeType.FILE;
+    } else if (status.isSymlink()) {
+      this.tpe = INodeType.SYMLINK;
+    } else {
+      throw new UnsupportedOperationException("Unknown type for " + status);
+    }
+
     this.path = new INodePath(status.getPath());
   }
 
@@ -78,8 +88,40 @@ public class INode implements DocumentLike<INode> {
   }
 
   public void addDiskUsage(long bytes) {
-    if (bytes < 0) throw new IllegalArgumentException("Negative bytes " + bytes + "in disk usage");
     setDiskUsage(this.diskUsageBytes + bytes);
+  }
+
+  /** Replace prefix srcPath with dstPath */
+  public INode replacePrefix(INodePath srcPath, INodePath dstPath) {
+    // if node does not have srcPath as prefix, throw exception as we cannot update such path
+    int srcLen = srcPath.getDepth();
+    int dstLen = dstPath.getDepth();
+    int len = this.path.getDepth();
+    for (int i = 0; i < srcLen; i++) {
+      if (i >= len || !this.path.getElem(i).equals(srcPath.getElem(i))) {
+        throw new IllegalArgumentException(this.path + " does not have expected prefix " + srcPath);
+      }
+    }
+
+    Path raw = dstPath.getPath();
+    while (srcLen < len) {
+      raw = new Path(raw, this.path.getElem(srcLen));
+      srcLen++;
+    }
+    this.path = new INodePath(raw);
+    return this;
+  }
+
+  public void setAccessTime(long time) {
+    this.accessTime = time;
+  }
+
+  public void setModificationTime(long time) {
+    this.modificationTime = time;
+  }
+
+  public void setReplicationFactor(int value) {
+    this.replicationFactor = value;
   }
 
   public String getUUID() {

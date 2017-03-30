@@ -1,5 +1,8 @@
 package com.github.lightcopy.fs;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.hadoop.fs.Path;
 
 import org.bson.Document;
@@ -44,6 +47,20 @@ public class INodePath implements DocumentLike<INodePath> {
   /** Get current path depth */
   public int getDepth() {
     return this.depth;
+  }
+
+  /** Get mapped fields */
+  public Map<String, String> getElements() {
+    Map<String, String> map = new HashMap<String, String>();
+    for (int i = 0; i < this.depth; i++) {
+      map.put(fieldName(i), this.elements[i]);
+    }
+    return map;
+  }
+
+  /** Get element of the path for index */
+  public String getElem(int index) {
+    return this.elements[index];
   }
 
   /** Get ith element path */

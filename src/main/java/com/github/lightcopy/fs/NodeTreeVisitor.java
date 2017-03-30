@@ -39,15 +39,7 @@ public class NodeTreeVisitor implements TreeVisitor {
 
   /** Convert file status into INode */
   private INode statusToNode(FileStatus root) {
-    if (root.isDirectory()) {
-      return new INode(root, INodeType.DIRECTORY);
-    } else if (root.isFile()) {
-      return new INode(root, INodeType.FILE);
-    } else if (root.isSymlink()) {
-      return new INode(root, INodeType.SYMLINK);
-    } else {
-      throw new UnsupportedOperationException("Unknown " + root);
-    }
+    return new INode(root);
   }
 
   @Override
