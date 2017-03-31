@@ -1,11 +1,13 @@
 package com.github.lightcopy.fs;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
 import org.apache.hadoop.hdfs.client.HdfsAdmin;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -19,10 +21,7 @@ import com.mongodb.client.MongoCollection;
 
 import com.github.lightcopy.conf.AppConf;
 
-/**
- * Implementation of [[FileSystemManager]] for HDFS.
- */
-public class HdfsManager extends FileSystemManager {
+public class HdfsManager {
   private static final Logger LOG = LoggerFactory.getLogger(HdfsManager.class);
 
   public static final String MONGO_DATABASE = "dbfs_db";
@@ -98,26 +97,79 @@ public class HdfsManager extends FileSystemManager {
     }
   }
 
+  /**
+   * Traverse root directory and propagate visitor for indexing.
+   */
+  private void indexFileSystem() throws IOException {
+    FileSystem fs = getFileSystem();
+    Path root = getRoot();
+    FileStatus rootStatus = fs.getFileStatus(root);
+    if (!rootStatus.isDirectory()) {
+      throw new IllegalArgumentException("Expected root path as directory, got " + rootStatus);
+    }
+    TreeVisitor visitor = prepareTreeVisitor();
+    walkTree(fs, rootStatus, visitor);
+  }
+
+  /**
+   * Walk file system tree starting with root directory. Root must be a valid directory, otherwise
+   * traversal is ignored, each file or symlink (non-directory) node is processed as child of
+   * current tree traversal.
+   */
+  private void walkTree(FileSystem fs, FileStatus root, TreeVisitor visitor)
+      throws FileNotFoundException, IOException {
+    if (root.isDirectory()) {
+      visitor.visitBefore(root);
+      FileStatus[] children = fs.listStatus(root.getPath());
+      if (children != null && children.length > 0) {
+        for (FileStatus child : children) {
+          if (child.isDirectory()) {
+            TreeVisitor levelVisitor = prepareTreeVisitor();
+            walkTree(fs, child, levelVisitor);
+            visitor.visitChild(levelVisitor);
+          } else {
+            visitor.visitChild(child);
+          }
+        }
+      }
+      visitor.visitAfter();
+    }
+  }
+
   protected DFSInotifyEventInputStream getEventStream() {
     return this.eventStream;
   }
 
-  @Override
+  /**
+   * Prepare tree visitor for a directory. All initialization code should go into this method,
+   * including allocating buffers for child leaves, etc. This method is invoked before walking
+   * part of the tree.
+   */
   public TreeVisitor prepareTreeVisitor() {
     return new NodeTreeVisitor(mongoFileSystem());
   }
 
-  @Override
+  /**
+   * Get file system used by this file system manager.
+   * Should return the same instance when called multiple times.
+   */
   public FileSystem getFileSystem() {
     return this.fs;
   }
 
-  @Override
+  /**
+   * Return root path for traversing managed by this file system manager. Must be visible for
+   * current traversal and must be a directory. Method should be stable, and return the same path
+   * when called multiple times.
+   */
   public Path getRoot() {
     return this.root;
   }
 
-  @Override
+  /**
+   * Initialize manager, this should include buffering streams, creating connections, and file
+   * system. Method is called only once.
+   */
   public void start() {
     long startTime = System.nanoTime();
     LOG.info("Start hdfs manager");
@@ -140,7 +192,10 @@ public class HdfsManager extends FileSystemManager {
     LOG.info("Started in {} ms", (endTime - startTime) / 1e6);
   }
 
-  @Override
+  /**
+   * Close associated resources, e.g. connection, event stream, etc.
+   * Method is called only once.
+   */
   public void stop() {
     long startTime = System.nanoTime();
     LOG.info("Stop hdfs manager");
