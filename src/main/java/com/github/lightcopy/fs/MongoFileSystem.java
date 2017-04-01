@@ -164,6 +164,11 @@ public class MongoFileSystem {
     }
   }
 
+  /**
+   * Insert list of nodes into file system. Nodes are not validated by path, therefore list should
+   * contain only distinct elements.
+   * @param nodes list of nodes to insert
+   */
   public void insert(List<INode> nodes) throws IOException {
     this.modificationLock.lock();
     long startTime = System.nanoTime();

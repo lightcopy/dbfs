@@ -26,20 +26,14 @@ public class NodeTreeVisitor implements TreeVisitor {
     return this.current;
   }
 
-  /** Convert file status into INode */
-  private INode statusToNode(FileStatus root) {
-    return new INode(root);
-  }
-
   @Override
   public void visitBefore(FileStatus root) {
-    this.current = statusToNode(root);
+    this.current = new INode(root);
   }
 
   @Override
   public void visitChild(FileStatus child) {
-    INode leaf = statusToNode(child);
-    this.leaves.add(leaf);
+    this.leaves.add(new INode(child));
   }
 
   @Override

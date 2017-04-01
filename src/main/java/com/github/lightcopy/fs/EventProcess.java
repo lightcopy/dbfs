@@ -73,21 +73,27 @@ public class EventProcess implements Runnable {
     if (event == null) {
       throw new NullPointerException("Event null for transaction " + transactionId);
     }
-
-    if (event instanceof Event.AppendEvent) {
-      doAppend((Event.AppendEvent) event, transactionId);
-    } else if (event instanceof Event.CloseEvent) {
-      doClose((Event.CloseEvent) event, transactionId);
-    } else if (event instanceof Event.CreateEvent) {
-      doCreate((Event.CreateEvent) event, transactionId);
-    } else if (event instanceof Event.MetadataUpdateEvent) {
-      doMetadataUpdate((Event.MetadataUpdateEvent) event, transactionId);
-    } else if (event instanceof Event.RenameEvent) {
-      doRename((Event.RenameEvent) event, transactionId);
-    } else if (event instanceof Event.UnlinkEvent) {
-      doUnlink((Event.UnlinkEvent) event, transactionId);
-    } else {
-      throw new UnsupportedOperationException("Unrecognized event " + event);
+    switch (event.getEventType()) {
+      case APPEND:
+        doAppend((Event.AppendEvent) event, transactionId);
+        break;
+      case CLOSE:
+        doClose((Event.CloseEvent) event, transactionId);
+        break;
+      case CREATE:
+        doCreate((Event.CreateEvent) event, transactionId);
+        break;
+      case METADATA:
+        doMetadataUpdate((Event.MetadataUpdateEvent) event, transactionId);
+        break;
+      case RENAME:
+        doRename((Event.RenameEvent) event, transactionId);
+        break;
+      case UNLINK:
+        doUnlink((Event.UnlinkEvent) event, transactionId);
+        break;
+      default:
+        throw new UnsupportedOperationException("Unrecognized event " + event);
     }
   }
 
