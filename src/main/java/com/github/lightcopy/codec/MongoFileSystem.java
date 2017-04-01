@@ -31,8 +31,11 @@ public class MongoFileSystem {
 
   public MongoFileSystem(MongoCollection<?> collection) {
     this.modificationLock = new ReentrantLock();
-    CodecRegistry registry = CodecRegistries.fromCodecs(new INodeCodec());
-    this.fs = collection.withCodecRegistry(registry).withDocumentClass(INode.class);
+    CodecRegistry defaults = collection.getCodecRegistry();
+    CodecRegistry support = CodecRegistries.fromCodecs(new INodeCodec());
+    this.fs = collection
+      .withCodecRegistry(CodecRegistries.fromRegistries(defaults, support))
+      .withDocumentClass(INode.class);
   }
 
   /** Helper method to compute duration in milliseconds */
@@ -94,8 +97,7 @@ public class MongoFileSystem {
       if (!result.wasAcknowledged()) {
         throw new IOException("Failed to update path " + path + " with update " + update);
       }
-      LOG.info("Modified path {} with update {}, modified count {} = 1", path, update,
-        result.getModifiedCount());
+      LOG.info("Modified path {}, modified count {} = 1", path, result.getModifiedCount());
     } else {
       LOG.warn("Update was ignored, because bson update is null for path {}", path);
     }

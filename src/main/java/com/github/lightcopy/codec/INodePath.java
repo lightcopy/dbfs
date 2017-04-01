@@ -69,7 +69,7 @@ public class INodePath {
   }
 
   /** Get underlying array for node path, should be read-only, does not return copy */
-  protected String[] array() {
+  public String[] array() {
     return this.elements;
   }
 
@@ -95,12 +95,13 @@ public class INodePath {
   /** Return new path with updated prefix */
   public INodePath withUpdatedPrefix(INodePath prefix, INodePath replacement) {
     if (!hasPrefix(prefix)) {
-      throw new IllegalArgumentException("Prefix " + prefix + "is not part of the path " + this);
+      throw new IllegalArgumentException("Prefix " + prefix + "is not prefix of the path " + this);
     }
     int total = this.depth - prefix.getDepth() + replacement.getDepth();
     String[] elems = new String[total];
     System.arraycopy(replacement.array(), 0, elems, 0, replacement.getDepth());
-    System.arraycopy(this.elements, 0, elems, replacement.getDepth(), this.depth);
+    System.arraycopy(this.elements, prefix.getDepth(), elems, replacement.getDepth(),
+      this.depth - prefix.getDepth());
     return new INodePath(total, elems);
   }
 
