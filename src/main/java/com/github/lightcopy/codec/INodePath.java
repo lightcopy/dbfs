@@ -63,6 +63,47 @@ public class INodePath {
     return map;
   }
 
+  /** Get element by index, index must be in range (less than depth) */
+  public String getElement(int index) {
+    return this.elements[index];
+  }
+
+  /** Get underlying array for node path, should be read-only, does not return copy */
+  protected String[] array() {
+    return this.elements;
+  }
+
+  /** Return first parent for this node or null, if it is root */
+  public INodePath getParent() {
+    if (this.depth == 0) return null;
+    String[] parts = new String[this.depth - 1];
+    System.arraycopy(this.elements, 0, parts, 0, this.depth - 1);
+    return new INodePath(parts.length, parts);
+  }
+
+  /** Check if current path starts with prefix */
+  public boolean hasPrefix(INodePath prefix) {
+    if (this.depth < prefix.getDepth()) return false;
+    for (int i = 0; i < prefix.getDepth(); i++) {
+      if (!this.elements[i].equals(prefix.getElement(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Return new path with updated prefix */
+  public INodePath withUpdatedPrefix(INodePath prefix, INodePath replacement) {
+    if (!hasPrefix(prefix)) {
+      throw new IllegalArgumentException("Prefix " + prefix + "is not part of the path " + this);
+    }
+    int total = this.depth - prefix.getDepth() + replacement.getDepth();
+    String[] elems = new String[total];
+    System.arraycopy(replacement.array(), 0, elems, 0, replacement.getDepth());
+    System.arraycopy(this.elements, 0, elems, replacement.getDepth(), this.depth);
+    return new INodePath(total, elems);
+  }
+
   @Override
   public String toString() {
     return "Path" + Arrays.toString(this.elements) + "(" + this.depth + ")";

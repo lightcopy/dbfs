@@ -171,7 +171,7 @@ public class WebServer {
       LOG.info("Created web server {}", server);
       server.launch();
     } catch (Exception err) {
-      LOG.error("Exception occuried", err);
+      LOG.error("Exception occurred", err);
       System.exit(1);
     }
   }

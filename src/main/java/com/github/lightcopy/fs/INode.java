@@ -52,31 +52,35 @@ public class INode implements DocumentLike<INode> {
   private INodePath path;
 
   public INode(FileStatus status) {
-    this.uuid = nextUUID();
-    this.accessTime = status.getAccessTime();
-    this.modificationTime = status.getModificationTime();
-    this.sizeBytes = status.getLen();
-    // disk usage defaults to size in bytes, for directories this
-    // has to be set to leaf total size
-    this.diskUsageBytes = this.sizeBytes;
-    this.blockSizeBytes = status.getBlockSize();
-    this.replicationFactor = status.getReplication();
-    // parse permissions and access
-    this.access = new INodeAccess(status.getOwner(), status.getGroup(), status.getPermission());
-    // parse path
-    this.name = status.getPath().getName();
-    // select appropriate type for inode
-    if (status.isDirectory()) {
-      this.tpe = INodeType.DIRECTORY;
-    } else if (status.isFile()) {
-      this.tpe = INodeType.FILE;
-    } else if (status.isSymlink()) {
-      this.tpe = INodeType.SYMLINK;
-    } else {
-      throw new UnsupportedOperationException("Unknown type for " + status);
-    }
+    try {
+      this.uuid = nextUUID();
+      this.accessTime = status.getAccessTime();
+      this.modificationTime = status.getModificationTime();
+      this.sizeBytes = status.getLen();
+      // disk usage defaults to size in bytes, for directories this
+      // has to be set to leaf total size
+      this.diskUsageBytes = this.sizeBytes;
+      this.blockSizeBytes = status.getBlockSize();
+      this.replicationFactor = status.getReplication();
+      // parse permissions and access
+      this.access = new INodeAccess(status.getOwner(), status.getGroup(), status.getPermission());
+      // parse path
+      this.name = status.getPath().getName();
+      // select appropriate type for inode
+      if (status.isDirectory()) {
+        this.tpe = INodeType.DIRECTORY;
+      } else if (status.isFile()) {
+        this.tpe = INodeType.FILE;
+      } else if (status.isSymlink()) {
+        this.tpe = INodeType.SYMLINK;
+      } else {
+        throw new UnsupportedOperationException("Unknown type for " + status);
+      }
 
-    this.path = new INodePath(status.getPath());
+      this.path = new INodePath(status.getPath());
+    } catch (Exception err) {
+      throw new RuntimeException("Failed to create inode from status " + status, err);
+    }
   }
 
   /** Constructor to create from Document */

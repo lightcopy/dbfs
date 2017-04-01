@@ -20,9 +20,9 @@ public class INodeAccess implements DocumentLike<INodeAccess> {
   private String permission;
 
   public INodeAccess(String owner, String group, FsPermission perm) {
-    setOwner(this.owner);
-    setGroup(this.group);
-    setPermission(this.permission);
+    setOwner(owner);
+    setGroup(group);
+    setPermission(permission);
   }
 
   /** Constructor to create from Document */

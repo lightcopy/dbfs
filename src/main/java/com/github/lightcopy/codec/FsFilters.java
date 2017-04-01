@@ -3,6 +3,13 @@ package com.github.lightcopy.codec;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.bson.Document;
+import org.bson.codecs.DocumentCodec;
+import org.bson.codecs.IntegerCodec;
+import org.bson.codecs.LongCodec;
+import org.bson.codecs.StringCodec;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import com.mongodb.client.model.Filters;
 
@@ -42,5 +49,23 @@ public class FsFilters {
   public static Bson paths(INodePath path) {
     ArrayList<Bson> filters = pathElements(path);
     return Filters.and(filters);
+  }
+
+  /** Generate filters to fetch parent nodes for this path. Does not return itself */
+  public static Bson parentPaths(INodePath path) {
+    ArrayList<Bson> filters = new ArrayList<Bson>();
+    INodePath parent = path.getParent();
+    while (parent != null) {
+      filters.add(path(parent));
+      parent = parent.getParent();
+    }
+    return Filters.or(filters);
+  }
+
+  /** Print filter as json */
+  public static String prettyString(Bson filter) {
+    CodecRegistry registry = CodecRegistries.fromCodecs(
+      new DocumentCodec(), new IntegerCodec(), new LongCodec(), new StringCodec());
+    return filter.toBsonDocument(Document.class, registry).toString();
   }
 }
