@@ -1,6 +1,7 @@
-package com.github.lightcopy.codec;
+package com.github.lightcopy.fs;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.bson.BsonDocument;
@@ -67,6 +68,14 @@ public class MongoFileSystem {
     }
     LOG.info("Inserted node {} with id {}, modified count {}", node, result.getUpsertedId(),
       result.getModifiedCount());
+  }
+
+  /** Insert group of nodes directly, without validating on existence */
+  private void doInsert(List<INode> nodes) throws IOException {
+    if (!nodes.isEmpty()) {
+      this.fs.insertMany(nodes);
+    }
+    LOG.info("Inserted {} nodes", nodes.size());
   }
 
   /** Rename src path into dst path */
@@ -152,6 +161,18 @@ public class MongoFileSystem {
       this.modificationLock.unlock();
       long endTime = System.nanoTime();
       LOG.info("Upsert operation took {} ms", millis(startTime, endTime));
+    }
+  }
+
+  public void insert(List<INode> nodes) throws IOException {
+    this.modificationLock.lock();
+    long startTime = System.nanoTime();
+    try {
+      doInsert(nodes);
+    } finally {
+      this.modificationLock.unlock();
+      long endTime = System.nanoTime();
+      LOG.info("Insert operation took {} ms", millis(startTime, endTime));
     }
   }
 

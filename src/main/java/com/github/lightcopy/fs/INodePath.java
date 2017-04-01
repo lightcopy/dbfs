@@ -1,47 +1,52 @@
 package com.github.lightcopy.fs;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 
-import org.bson.Document;
-
-import com.github.lightcopy.mongo.DocumentLike;
-
 /**
  * Representation of tree path for inode.
- * Currently has a limitation on maximum number of levels (depth of the tree).
  */
-public class INodePath implements DocumentLike<INodePath> {
+public class INodePath {
   // field names for document
   public static final String FIELD_DEPTH = "depth";
   // field name for each path level
-  private static String fieldName(int index) {
-    return "" + index;
-  }
+  public static String FIELD_NAME(int index) { return "" + index; }
 
   // elements that construct path
   private String[] elements;
   private int depth;
 
-  public INodePath(Path path) {
-    // path is always filled from left to right, leaving unused fields as nulls
-    this.depth = path.depth();
-    this.elements = parse(path);
+  public INodePath(String path) {
+    this(new Path(path));
   }
 
-  /** Constructor to create from Document */
-  public INodePath() { }
-
-  protected String[] parse(Path path) {
-    int total = path.depth();
-    String[] elems = new String[total];
+  public INodePath(Path path) {
+    if (!path.isAbsolute()) {
+      throw new IllegalArgumentException("Absolute path required, found " + path);
+    }
+    // path is always filled from left to right, leaving unused fields as nulls
+    this.depth = path.depth();
+    this.elements = new String[this.depth];
+    int total = this.depth;
     while (total > 0) {
-      elems[--total] = path.getName();
+      this.elements[--total] = path.getName();
       path = path.getParent();
     }
-    return elems;
+  }
+
+  protected INodePath(int depth, String[] elements) {
+    if (depth < 0) {
+      throw new IllegalArgumentException("Expected non-negative depth, found " + depth + " depth");
+    }
+    if (elements.length != depth) {
+      throw new IllegalArgumentException("Inconsistent set of elements, " + elements.length +
+        " != " + depth);
+    }
+    this.depth = depth;
+    this.elements = elements;
   }
 
   /** Get current path depth */
@@ -49,56 +54,59 @@ public class INodePath implements DocumentLike<INodePath> {
     return this.depth;
   }
 
-  /** Get mapped fields */
+  /** Get mapped elements for the path */
   public Map<String, String> getElements() {
-    Map<String, String> map = new HashMap<String, String>();
+    Map<String, String> map = new LinkedHashMap<String, String>();
     for (int i = 0; i < this.depth; i++) {
-      map.put(fieldName(i), this.elements[i]);
+      map.put(FIELD_NAME(i), this.elements[i]);
     }
     return map;
   }
 
-  /** Get element of the path for index */
-  public String getElem(int index) {
+  /** Get element by index, index must be in range (less than depth) */
+  public String getElement(int index) {
     return this.elements[index];
   }
 
-  /** Get ith element path */
-  private Path getPath(int index) {
-    if (index >= this.depth) return null;
-    Path curr = new Path(this.elements[index]);
-    Path next = getPath(index + 1);
-    if (next == null) return curr;
-    return new Path(curr, next);
+  /** Get underlying array for node path, should be read-only, does not return copy */
+  public String[] array() {
+    return this.elements;
   }
 
-  /** Get path from collected elements, mainly for testing */
-  public Path getPath() {
-    Path path = getPath(0);
-    if (path == null) return new Path(Path.SEPARATOR);
-    return new Path(Path.SEPARATOR, getPath(0));
+  /** Return first parent for this node or null, if it is root */
+  public INodePath getParent() {
+    if (this.depth == 0) return null;
+    String[] parts = new String[this.depth - 1];
+    System.arraycopy(this.elements, 0, parts, 0, this.depth - 1);
+    return new INodePath(parts.length, parts);
   }
 
-  @Override
-  public Document toDocument() {
-    Document doc = new Document(FIELD_DEPTH, this.depth);
-    for (int i = 0; i < this.depth; i++) {
-      doc.append(fieldName(i), this.elements[i]);
-    }
-    return doc;
-  }
-
-  @Override
-  public INodePath fromDocument(Document doc) {
-    this.depth = doc.getInteger(FIELD_DEPTH);
-    this.elements = new String[this.depth];
-    for (int i = 0; i < this.depth; i++) {
-      this.elements[i] = doc.getString(fieldName(i));
-      if (i < this.depth && this.elements[i] == null) {
-        throw new RuntimeException("Path element is null for depth " + this.depth +
-          " and document " + doc);
+  /** Check if current path starts with prefix */
+  public boolean hasPrefix(INodePath prefix) {
+    if (this.depth < prefix.getDepth()) return false;
+    for (int i = 0; i < prefix.getDepth(); i++) {
+      if (!this.elements[i].equals(prefix.getElement(i))) {
+        return false;
       }
     }
-    return this;
+    return true;
+  }
+
+  /** Return new path with updated prefix */
+  public INodePath withUpdatedPrefix(INodePath prefix, INodePath replacement) {
+    if (!hasPrefix(prefix)) {
+      throw new IllegalArgumentException("Prefix " + prefix + "is not prefix of the path " + this);
+    }
+    int total = this.depth - prefix.getDepth() + replacement.getDepth();
+    String[] elems = new String[total];
+    System.arraycopy(replacement.array(), 0, elems, 0, replacement.getDepth());
+    System.arraycopy(this.elements, prefix.getDepth(), elems, replacement.getDepth(),
+      this.depth - prefix.getDepth());
+    return new INodePath(total, elems);
+  }
+
+  @Override
+  public String toString() {
+    return "Path" + Arrays.toString(this.elements) + "(" + this.depth + ")";
   }
 }

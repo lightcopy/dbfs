@@ -1,4 +1,4 @@
-package com.github.lightcopy.codec;
+package com.github.lightcopy.fs;
 
 import java.util.Map;
 

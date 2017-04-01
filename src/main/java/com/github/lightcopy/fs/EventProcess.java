@@ -12,8 +12,6 @@ import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.lightcopy.mongo.MongoUtils;
-
 /**
  * Event processing thread to capture HDFS events.
  */

@@ -14,23 +14,23 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.bson.Document;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoCollection;
 
 import com.github.lightcopy.conf.AppConf;
 
 public class HdfsManager {
   private static final Logger LOG = LoggerFactory.getLogger(HdfsManager.class);
 
-  public static final String MONGO_DATABASE = "dbfs_db";
-  public static final String MONGO_COLLECTION_FILE_SYSTEM = "file_system";
-  public static final String MONGO_COLLECTION_EVENT_POOL = "event_pool";
+  public static final String MONGO_DATABASE = "dbfs";
+  public static final String MONGO_COLLECTION_FILE_SYSTEM = "filesystem";
+  public static final String MONGO_COLLECTION_EVENT_POOL = "eventpool";
 
   private HdfsAdmin admin;
   private FileSystem fs;
   private MongoClient mongo;
+  private MongoFileSystem mongoFS;
+  private MongoEventPool mongoEventPool;
   private Path root;
   private DFSInotifyEventInputStream eventStream;
   private EventProcess eventProcess;
@@ -52,21 +52,18 @@ public class HdfsManager {
       this.mongo = new MongoClient(new MongoClientURI(mongoConnection));
       LOG.info("Set root path as {}", root);
       this.root = root;
+      // Mongo will create database if one does not exist already, the same applies to collections,
+      // they are only created when inserting document. Calling cleanup state after initializing
+      // properties is okay - database and collections will be recreated
+      this.mongoFS = new MongoFileSystem(
+        this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_COLLECTION_FILE_SYSTEM));
+      this.mongoEventPool = new MongoEventPool(
+        this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_COLLECTION_EVENT_POOL));
     } catch (IOException ioe) {
       String msg = "Failed to initialize hdfs manager";
       LOG.error(msg, ioe);
       throw new RuntimeException(msg, ioe);
     }
-  }
-
-  /** Get mongo collection for file system metadata */
-  protected MongoCollection<Document> mongoFileSystem() {
-    return this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_COLLECTION_FILE_SYSTEM);
-  }
-
-  /** Get mongo collection to store hdfs events */
-  protected MongoCollection<Document> mongoEventPool() {
-    return this.mongo.getDatabase(MONGO_DATABASE).getCollection(MONGO_COLLECTION_EVENT_POOL);
   }
 
   private void cleanupState() {
@@ -164,6 +161,16 @@ public class HdfsManager {
    */
   public Path getRoot() {
     return this.root;
+  }
+
+  /** Get mongo file system to manage metadata */
+  protected MongoFileSystem mongoFileSystem() {
+    return this.mongoFS;
+  }
+
+  /** Get mongo event pool to store hdfs events */
+  protected MongoEventPool mongoEventPool() {
+    return this.mongoEventPool;
   }
 
   /**
