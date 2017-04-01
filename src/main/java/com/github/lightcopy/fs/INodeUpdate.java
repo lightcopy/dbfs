@@ -22,6 +22,8 @@ public class INodeUpdate {
   private String owner;
   // inode permission, must be not null to update
   private String permission;
+  // inode file size in bytes, must be > 0 to update
+  private long sizeBytes;
 
   public INodeUpdate() { }
 
@@ -50,6 +52,17 @@ public class INodeUpdate {
     return this;
   }
 
+  public INodeUpdate setReplication(int replication) {
+    this.replicationFactor = replication;
+    return this;
+  }
+
+  /** This is added for close event, metadata event does not update this field */
+  public INodeUpdate setFileSize(long bytes) {
+    this.sizeBytes = bytes;
+    return this;
+  }
+
   /** Return Bson object with updates */
   public Bson bson() {
     ArrayList<Bson> batch = new ArrayList<Bson>();
@@ -75,6 +88,10 @@ public class INodeUpdate {
 
     if (this.permission != null) {
       batch.add(Updates.set(INode.FIELD_PERMISSION, this.permission));
+    }
+
+    if (this.sizeBytes > 0) {
+      batch.add(Updates.set(INode.FIELD_SIZE_BYTES, this.sizeBytes));
     }
     // if batch does not contain any updates return null, indicating that update should be ignored
     // upstream

@@ -73,6 +73,8 @@ public class EventProcess implements Runnable {
     if (event == null) {
       throw new NullPointerException("Event null for transaction " + transactionId);
     }
+    // always save event before moving to file system
+    this.manager.mongoEventPool().insert(new EventContainer(transactionId, event));
     switch (event.getEventType()) {
       case APPEND:
         doAppend((Event.AppendEvent) event, transactionId);
@@ -97,33 +99,58 @@ public class EventProcess implements Runnable {
     }
   }
 
-  protected void doAppend(Event.AppendEvent event, long transactionId) throws IOException {
-    // we do not process append events
+  protected void doAppend(Event.AppendEvent event, long transactionId) {
+    // append is triggered when file is opened for append, this does not really update file system,
+    // we instead listen to close events.
     LOG.info("APPEND(path={})", event.getPath());
   }
 
-  protected void doClose(Event.CloseEvent event, long transactionId) {
+  protected void doClose(Event.CloseEvent event, long transactionId) throws IOException {
     LOG.info("CLOSE(filesize={}, path={}, ts={})",
       event.getFileSize(), event.getPath(), event.getTimestamp());
+    INodePath path = new INodePath(event.getPath());
+    INodeUpdate update = new INodeUpdate().setFileSize(event.getFileSize());
+    this.manager.mongoFileSystem().update(path, update);
   }
 
   protected void doCreate(Event.CreateEvent event, long transactionId) throws IOException {
     LOG.info("CREATE(group={}, owner={}, path={})",
       event.getGroupName(), event.getOwnerName(), event.getPath());
+    // for create event we need to load file status, because create event does not have information
+    // on file size
+    FileStatus status = this.manager.getFileSystem().getFileStatus(new Path(event.getPath()));
+    INode node = new INode(status);
+    this.manager.mongoFileSystem().upsert(node);
   }
 
-  protected void doMetadataUpdate(Event.MetadataUpdateEvent event, long transactionId) {
+  protected void doMetadataUpdate(
+      Event.MetadataUpdateEvent event,
+      long transactionId) throws IOException {
     LOG.info("METADATA(acls={}, group={}, owner={}, path={}, atime={}, perms={})",
       event.getAcls(), event.getGroupName(), event.getOwnerName(), event.getPath(),
       event.getAtime(), event.getPerms());
+    INodePath path = new INodePath(event.getPath());
+    INodeUpdate update = new INodeUpdate()
+      .setAtime(event.getAtime())
+      .setGroup(event.getGroupName())
+      .setMtime(event.getMtime())
+      .setOwner(event.getOwnerName())
+      .setPermission(event.getPerms().toString())
+      .setReplication(event.getReplication());
+    this.manager.mongoFileSystem().update(path, update);
   }
 
-  protected void doRename(Event.RenameEvent event, long transactionId) {
+  protected void doRename(Event.RenameEvent event, long transactionId) throws IOException {
     LOG.info("RENAME(ts={}, src={}, dst={})",
       event.getTimestamp(), event.getSrcPath(), event.getDstPath());
+    INodePath srcPath = new INodePath(event.getSrcPath());
+    INodePath dstPath = new INodePath(event.getDstPath());
+    this.manager.mongoFileSystem().rename(srcPath, dstPath);
   }
 
-  protected void doUnlink(Event.UnlinkEvent event, long transactionId) {
+  protected void doUnlink(Event.UnlinkEvent event, long transactionId) throws IOException {
     LOG.info("UNLINK(ts={}, path={})", event.getTimestamp(), event.getPath());
+    INodePath path = new INodePath(event.getPath());
+    this.manager.mongoFileSystem().delete(path);
   }
 }
