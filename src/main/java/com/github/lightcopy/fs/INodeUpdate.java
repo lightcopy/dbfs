@@ -2,6 +2,8 @@ package com.github.lightcopy.fs;
 
 import java.util.ArrayList;
 
+import org.apache.hadoop.fs.permission.FsPermission;
+
 import org.bson.conversions.Bson;
 import com.mongodb.client.model.Updates;
 
@@ -47,8 +49,10 @@ public class INodeUpdate {
     return this;
   }
 
-  public INodeUpdate setPermission(String permission) {
-    this.permission = permission;
+  public INodeUpdate setPermission(FsPermission permission) {
+    if (permission != null) {
+      this.permission = permission.toString();
+    }
     return this;
   }
 

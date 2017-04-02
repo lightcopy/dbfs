@@ -12,14 +12,13 @@ import org.apache.hadoop.hdfs.inotify.Event.EventType;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.BsonWriter;
-import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 
 /**
  * Custom EventContainer (HDFS event) conversion codec for Mongo.
  */
-public class EventCodec implements Codec<EventContainer> {
+public class EventCodec extends AbstractCodec<EventContainer> {
   public EventCodec() { }
 
   @Override
@@ -40,9 +39,9 @@ public class EventCodec implements Codec<EventContainer> {
 
     writer.writeStartDocument();
     writer.writeInt64(EventContainer.FIELD_TRANSACTION_ID, transaction);
-    writer.writeString(EventContainer.FIELD_EVENT_TYPE, event.getEventType().name());
+    safeWriteString(writer, EventContainer.FIELD_EVENT_TYPE, event.getEventType().name());
     // == event ==
-    writer.writeName(INode.FIELD_PATH);
+    writer.writeName(EventContainer.FIELD_EVENT);
     switch (event.getEventType()) {
       case APPEND:
         encode(writer, (AppendEvent) event);
@@ -75,7 +74,7 @@ public class EventCodec implements Codec<EventContainer> {
    */
   private void encode(BsonWriter writer, AppendEvent event) {
     writer.writeStartDocument();
-    writer.writeString(EventContainer.FIELD_PATH, event.getPath());
+    safeWriteString(writer, EventContainer.FIELD_PATH, event.getPath());
     writer.writeEndDocument();
   }
 
@@ -86,7 +85,7 @@ public class EventCodec implements Codec<EventContainer> {
   private void encode(BsonWriter writer, CloseEvent event) {
     writer.writeStartDocument();
     writer.writeInt64(EventContainer.FIELD_FILESIZE, event.getFileSize());
-    writer.writeString(EventContainer.FIELD_PATH, event.getPath());
+    safeWriteString(writer, EventContainer.FIELD_PATH, event.getPath());
     writer.writeInt64(EventContainer.FIELD_TIMESTAMP, event.getTimestamp());
     writer.writeEndDocument();
   }
@@ -98,14 +97,14 @@ public class EventCodec implements Codec<EventContainer> {
   private void encode(BsonWriter writer, CreateEvent event) {
     writer.writeStartDocument();
     writer.writeInt64(EventContainer.FIELD_CREATION_TIME, event.getCtime());
-    writer.writeString(EventContainer.FIELD_GROUP, event.getGroupName());
-    writer.writeString(EventContainer.FIELD_INODETYPE, event.getiNodeType().name());
+    safeWriteString(writer, EventContainer.FIELD_GROUP, event.getGroupName());
+    safeWriteString(writer, EventContainer.FIELD_INODETYPE, event.getiNodeType().name());
     writer.writeBoolean(EventContainer.FIELD_OVERWRITE, event.getOverwrite());
-    writer.writeString(EventContainer.FIELD_OWNER, event.getOwnerName());
-    writer.writeString(EventContainer.FIELD_PATH, event.getPath());
-    writer.writeString(EventContainer.FIELD_PERMISSION, event.getPerms().toString());
+    safeWriteString(writer, EventContainer.FIELD_OWNER, event.getOwnerName());
+    safeWriteString(writer, EventContainer.FIELD_PATH, event.getPath());
+    safeWritePermString(writer, EventContainer.FIELD_PERMISSION, event.getPerms());
     writer.writeInt32(EventContainer.FIELD_REPLICATION, event.getReplication());
-    writer.writeString(EventContainer.FIELD_SYMLINK_TARGET, event.getSymlinkTarget());
+    safeWriteString(writer, EventContainer.FIELD_SYMLINK_TARGET, event.getSymlinkTarget());
     writer.writeEndDocument();
   }
 
@@ -120,12 +119,12 @@ public class EventCodec implements Codec<EventContainer> {
     // do not write Acls and xAttributes
     writer.writeStartDocument();
     writer.writeInt64(EventContainer.FIELD_ACCESS_TIME, event.getAtime());
-    writer.writeString(EventContainer.FIELD_GROUP, event.getGroupName());
-    writer.writeString(EventContainer.FIELD_METADATA_TYPE, event.getMetadataType().name());
+    safeWriteString(writer, EventContainer.FIELD_GROUP, event.getGroupName());
+    safeWriteString(writer, EventContainer.FIELD_METADATA_TYPE, event.getMetadataType().name());
     writer.writeInt64(EventContainer.FIELD_MODIFICATION_TIME, event.getMtime());
-    writer.writeString(EventContainer.FIELD_OWNER, event.getOwnerName());
-    writer.writeString(EventContainer.FIELD_PATH, event.getPath());
-    writer.writeString(EventContainer.FIELD_PERMISSION, event.getPerms().toString());
+    safeWriteString(writer, EventContainer.FIELD_OWNER, event.getOwnerName());
+    safeWriteString(writer, EventContainer.FIELD_PATH, event.getPath());
+    safeWritePermString(writer, EventContainer.FIELD_PERMISSION, event.getPerms());
     writer.writeInt32(EventContainer.FIELD_REPLICATION, event.getReplication());
     writer.writeEndDocument();
   }
@@ -136,8 +135,8 @@ public class EventCodec implements Codec<EventContainer> {
    */
   private void encode(BsonWriter writer, RenameEvent event) {
     writer.writeStartDocument();
-    writer.writeString(EventContainer.FIELD_SRC_PATH, event.getSrcPath());
-    writer.writeString(EventContainer.FIELD_DST_PATH, event.getDstPath());
+    safeWriteString(writer, EventContainer.FIELD_SRC_PATH, event.getSrcPath());
+    safeWriteString(writer, EventContainer.FIELD_DST_PATH, event.getDstPath());
     writer.writeInt64(EventContainer.FIELD_TIMESTAMP, event.getTimestamp());
     writer.writeEndDocument();
   }
@@ -148,7 +147,7 @@ public class EventCodec implements Codec<EventContainer> {
    */
   private void encode(BsonWriter writer, UnlinkEvent event) {
     writer.writeStartDocument();
-    writer.writeString(EventContainer.FIELD_PATH, event.getPath());
+    safeWriteString(writer, EventContainer.FIELD_PATH, event.getPath());
     writer.writeInt64(EventContainer.FIELD_TIMESTAMP, event.getTimestamp());
     writer.writeEndDocument();
   }

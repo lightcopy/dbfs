@@ -2,6 +2,7 @@ package com.github.lightcopy.fs;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 
 import org.bson.Document;
 
@@ -52,7 +53,7 @@ public class INode {
   public INode(FileStatus status) {
     this(status.getAccessTime(), status.getModificationTime(), status.getLen(),
       status.getBlockSize(), status.getReplication(), status.getGroup(), status.getOwner(),
-      status.getPermission().toString(), status.getPath().getName(),
+      permissionString(status.getPermission()), status.getPath().getName(),
       new INodePath(status.getPath()), statusType(status));
   }
 
@@ -99,6 +100,11 @@ public class INode {
     } else {
       return INodeType.SYMLINK;
     }
+  }
+
+  /** Convert permission into string, or return null */
+  private static String permissionString(FsPermission permission) {
+    return (permission == null) ? null : permission.toString();
   }
 
   protected INode setAccessTime(long value) {

@@ -1,5 +1,6 @@
 package com.github.lightcopy.fs;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
@@ -118,9 +119,18 @@ public class EventProcess implements Runnable {
       event.getGroupName(), event.getOwnerName(), event.getPath());
     // for create event we need to load file status, because create event does not have information
     // on file size
-    FileStatus status = this.manager.getFileSystem().getFileStatus(new Path(event.getPath()));
-    INode node = new INode(status);
-    this.manager.mongoFileSystem().upsert(node);
+    // when status does not exist, we should drop insertion of file and log it; however, there are
+    // special situations like _COPYING_ files, that we do not log, they are part of copying files
+    // from local to hdfs
+    try {
+      FileStatus status = this.manager.getFileSystem().getFileStatus(new Path(event.getPath()));
+      INode node = new INode(status);
+      this.manager.mongoFileSystem().upsert(node);
+    } catch (FileNotFoundException err) {
+      if (!event.getPath().endsWith("._COPYING_")) {
+        LOG.warn("Dropped path {}, because it does not exist on HDFS", event.getPath());
+      }
+    }
   }
 
   protected void doMetadataUpdate(
@@ -135,7 +145,7 @@ public class EventProcess implements Runnable {
       .setGroup(event.getGroupName())
       .setMtime(event.getMtime())
       .setOwner(event.getOwnerName())
-      .setPermission(event.getPerms().toString())
+      .setPermission(event.getPerms())
       .setReplication(event.getReplication());
     this.manager.mongoFileSystem().update(path, update);
   }

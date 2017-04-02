@@ -5,14 +5,13 @@ import java.util.Map;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.BsonWriter;
-import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 
 /**
  * Custom INode conversion codec for Mongo.
  */
-public class INodeCodec implements Codec<INode> {
+public class INodeCodec extends AbstractCodec<INode> {
   public INodeCodec() { }
 
   @Override
@@ -87,10 +86,10 @@ public class INodeCodec implements Codec<INode> {
     writer.writeInt64(INode.FIELD_SIZE_BYTES, value.getSize());
     writer.writeInt64(INode.FIELD_BLOCK_SIZE_BYTES, value.getBlockSize());
     writer.writeInt32(INode.FIELD_REPLICATION_FACTOR, value.getReplicationFactor());
-    writer.writeString(INode.FIELD_GROUP, value.getGroup());
-    writer.writeString(INode.FIELD_OWNER, value.getOwner());
-    writer.writeString(INode.FIELD_PERMISSION, value.getPermission());
-    writer.writeString(INode.FIELD_NAME, value.getName());
+    safeWriteString(writer, INode.FIELD_GROUP, value.getGroup());
+    safeWriteString(writer, INode.FIELD_OWNER, value.getOwner());
+    safeWriteString(writer, INode.FIELD_PERMISSION, value.getPermission());
+    safeWriteString(writer, INode.FIELD_NAME, value.getName());
     // == path ==
     writer.writeName(INode.FIELD_PATH);
     writer.writeStartDocument();
@@ -98,11 +97,11 @@ public class INodeCodec implements Codec<INode> {
     writer.writeInt32(INodePath.FIELD_DEPTH, path.getDepth());
     Map<String, String> map = path.getElements();
     for (Map.Entry<String, String> entry : map.entrySet()) {
-      writer.writeString(entry.getKey(), entry.getValue());
+      safeWriteString(writer, entry.getKey(), entry.getValue());
     }
     writer.writeEndDocument();
     // == path ==
-    writer.writeString(INode.FIELD_TYPE, value.getTypeName());
+    safeWriteString(writer, INode.FIELD_TYPE, value.getTypeName());
     writer.writeEndDocument();
   }
 }
