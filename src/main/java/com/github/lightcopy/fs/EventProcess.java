@@ -1,12 +1,12 @@
 package com.github.lightcopy.fs;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 
@@ -110,27 +110,42 @@ public class EventProcess implements Runnable {
     LOG.info("CLOSE(filesize={}, path={}, ts={})",
       event.getFileSize(), event.getPath(), event.getTimestamp());
     INodePath path = new INodePath(event.getPath());
-    INodeUpdate update = new INodeUpdate().setFileSize(event.getFileSize());
+    INodeUpdate update = new INodeUpdate()
+      .setFileSize(event.getFileSize())
+      .setMtime(event.getTimestamp());
     this.manager.mongoFileSystem().update(path, update);
   }
 
   protected void doCreate(Event.CreateEvent event, long transactionId) throws IOException {
     LOG.info("CREATE(group={}, owner={}, path={})",
       event.getGroupName(), event.getOwnerName(), event.getPath());
-    // for create event we need to load file status, because create event does not have information
-    // on file size
-    // when status does not exist, we should drop insertion of file and log it; however, there are
-    // special situations like _COPYING_ files, that we do not log, they are part of copying files
-    // from local to hdfs
-    try {
-      FileStatus status = this.manager.getFileSystem().getFileStatus(new Path(event.getPath()));
-      INode node = new INode(status);
-      this.manager.mongoFileSystem().upsert(node);
-    } catch (FileNotFoundException err) {
-      if (!event.getPath().endsWith("._COPYING_")) {
-        LOG.warn("Dropped path {}, because it does not exist on HDFS", event.getPath());
-      }
+    // reconstruct file status from create event. For directory, it is okay, because we would not
+    // need to update file size. For files, close event will be called after creation, which would
+    // update file size on this path.
+    // when copying files from local to hdfs, chain of events is triggered create -> close -> rename
+    // in this case we execute them in exact same order, relying on lock for mongo fs.
+    if (event.getOverwrite()) {
+      // delete previous file
+      INodePath path = new INodePath(event.getPath());
+      this.manager.mongoFileSystem().delete(path);
+      LOG.info("Delete previous file {}, event overwrites file", event.getPath());
     }
+
+    long defaultSize = 0L;
+    long defaultBlockSize = event.getDefaultBlockSize();
+    boolean isDirectory = event.getiNodeType() == Event.CreateEvent.INodeType.DIRECTORY;
+    int replication = event.getReplication();
+    long accessTime = event.getCtime();
+    long modificationTime = event.getCtime();
+    FsPermission permission = new FsPermission(event.getPerms());
+    Path symlinkPath = (event.getSymlinkTarget() == null) ? null : new Path(event.getSymlinkTarget());
+    Path path = new Path(event.getPath());
+
+    FileStatus status = new FileStatus(defaultSize, isDirectory, replication, defaultBlockSize,
+      modificationTime, accessTime, permission, event.getOwnerName(), event.getGroupName(),
+      symlinkPath, path);
+    INode node = new INode(status);
+    this.manager.mongoFileSystem().upsert(node);
   }
 
   protected void doMetadataUpdate(

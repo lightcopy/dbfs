@@ -159,6 +159,8 @@ public class INode {
 
   protected INode setPath(INodePath path) {
     this.path = path;
+    this.name = path.getName();
+
     return this;
   }
 

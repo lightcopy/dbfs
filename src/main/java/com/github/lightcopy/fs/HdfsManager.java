@@ -206,13 +206,13 @@ public class HdfsManager {
    * if event process thread is running correctly and other threads are okay.
    */
   public boolean status() {
-    boolean isAlive = true;
+    boolean isAlive = !this.eventProcess.isStopped();
     try {
-      isAlive = this.mongo.getServerAddressList() != null;
+      isAlive = isAlive && this.mongo.getServerAddressList() != null;
     } catch (Exception err) {
       isAlive = false;
     }
-    return isAlive && !this.eventProcess.isStopped();
+    return isAlive;
   }
 
   /**

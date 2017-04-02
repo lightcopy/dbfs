@@ -81,6 +81,13 @@ public class INodePath {
     return new INodePath(parts.length, parts);
   }
 
+  /** Return last element if depth > 0, otherwise return empty string (root) */
+  public String getName() {
+    // in case of root directory
+    if (this.depth == 0) return "";
+    return this.elements[this.depth - 1];
+  }
+
   /** Check if current path starts with prefix */
   public boolean hasPrefix(INodePath prefix) {
     if (this.depth < prefix.getDepth()) return false;
