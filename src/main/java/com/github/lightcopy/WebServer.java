@@ -24,6 +24,7 @@ import com.github.lightcopy.fs.HdfsManager;
  */
 public class WebServer {
   private static final Logger LOG = LoggerFactory.getLogger(WebServer.class);
+  private static final int PING_INTERVAL = 2000;
 
   private final String scheme;
   private final String host;
@@ -147,7 +148,7 @@ public class WebServer {
    * Start web server using provided options. As part of initialization registers all shutdown
    * hooks, including one for the server.
    */
-  public void launch() throws IOException {
+  public void launch() throws IOException, InterruptedException {
     // register shutdown hook for server after all events
     registerShutdownHook(new ServerShutdown(this));
     for (Runnable event : this.events) {
@@ -157,6 +158,13 @@ public class WebServer {
     LOG.info("Start server {}", this);
     this.server.start();
     this.manager.start();
+    while (true) {
+      if (!this.manager.status()) {
+        Thread.currentThread().interrupt();
+      }
+      LOG.trace("Ping server for status...");
+      Thread.sleep(PING_INTERVAL);
+    }
   }
 
   @Override

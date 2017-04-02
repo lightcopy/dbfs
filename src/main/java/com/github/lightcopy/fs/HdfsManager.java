@@ -5,11 +5,12 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
-import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSInotifyEventInputStream;
+import org.apache.hadoop.hdfs.client.HdfsAdmin;
+import org.apache.hadoop.ipc.RemoteException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,6 +198,21 @@ public class HdfsManager {
     }
     long endTime = System.nanoTime();
     LOG.info("Started in {} ms", (endTime - startTime) / 1e6);
+  }
+
+  /**
+   * Method to return status as true/false, on whether or not all systems for hdfs manager are
+   * running. This can also print necessary status details on overall performance. Return `true`,
+   * if event process thread is running correctly and other threads are okay.
+   */
+  public boolean status() {
+    boolean isAlive = true;
+    try {
+      isAlive = this.mongo.getServerAddressList() != null;
+    } catch (Exception err) {
+      isAlive = false;
+    }
+    return isAlive && !this.eventProcess.isStopped();
   }
 
   /**

@@ -50,7 +50,7 @@ public class EventProcess implements Runnable {
         LOG.trace("Waiting to poll, interval={}", interval);
         Thread.sleep(interval);
       } catch (Exception err) {
-        LOG.error("Thread intrerrupted", err);
+        LOG.error("Thread interrupted", err);
         this.stopped = true;
       }
     }
