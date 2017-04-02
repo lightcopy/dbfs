@@ -19,11 +19,11 @@ import com.github.lightcopy.conf.AppConf;
 import com.github.lightcopy.fs.HdfsManager;
 
 /**
- * Main entrypoint to launch web server. Provides basic application context for providers.
+ * Main entrypoint to launch dbfs web server. Provides basic application context for providers.
  * Providers must be registered manually without web.xml.
  */
-public class WebServer {
-  private static final Logger LOG = LoggerFactory.getLogger(WebServer.class);
+public class DBFS {
+  private static final Logger LOG = LoggerFactory.getLogger(DBFS.class);
   private static final int PING_INTERVAL = 2000;
 
   private final String scheme;
@@ -49,9 +49,9 @@ public class WebServer {
    * Shutdown hook to gracefully stop web server.
    */
   static class ServerShutdown implements Runnable {
-    private final WebServer server;
+    private final DBFS server;
 
-    ServerShutdown(WebServer server) {
+    ServerShutdown(DBFS server) {
       this.server = server;
     }
 
@@ -89,7 +89,7 @@ public class WebServer {
     }
   }
 
-  public WebServer(Properties props) {
+  public DBFS(Properties props) {
     this.conf = new AppConf(props);
     this.scheme = this.conf.scheme();
     this.host = this.conf.httpHost();
@@ -175,8 +175,8 @@ public class WebServer {
   public static void main(String[] args) {
     try {
       LOG.info("Initialize web server");
-      WebServer server = new WebServer(System.getProperties());
-      LOG.info("Created web server {}", server);
+      DBFS server = new DBFS(System.getProperties());
+      LOG.info("Created dbfs {}", server);
       server.launch();
     } catch (Exception err) {
       LOG.error("Exception occurred", err);
