@@ -10,6 +10,7 @@ import javax.ws.rs.core.Response;
 @Path("/")
 public class ContextProvider {
   private static final String INDEX_FAVICON_PATH = "static/favicon.ico";
+  private static final String INDEX_LOGO_PATH = "static/logo.png";
   private static final String INDEX_CSS_PATH = "static/index.min.css";
   private static final String INDEX_JS_PATH = "static/index.min.js";
   private static final String INDEX_HTML_PATH = "static/index.html";
@@ -20,6 +21,14 @@ public class ContextProvider {
   public Response getFavicon() {
     InputStream icon = this.getClass().getClassLoader().getResourceAsStream(INDEX_FAVICON_PATH);
     return Response.ok(icon).build();
+  }
+
+  @GET
+  @Path(INDEX_LOGO_PATH)
+  @Produces("image/png")
+  public Response getLogo() {
+    InputStream logo = this.getClass().getClassLoader().getResourceAsStream(INDEX_LOGO_PATH);
+    return Response.ok(logo).build();
   }
 
   @GET

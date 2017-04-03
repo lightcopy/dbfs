@@ -1,22 +1,28 @@
 .masthead {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
   text-align: center;
-  background-color: $brand-gray-dark;
+  background-color: $brand-white;
 
   a {
-    color: rgba(255, 255, 255, 0.5);
+    color: $brand-gray;
 
     &:hover {
       color: #fff;
       text-decoration: none;
     }
   }
+
+  img {
+    display: inline-block;
+    vertical-align: middle;
+  }
 }
 
 .masthead-nav {
   margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
   font-size: 1rem;
 
   a {
