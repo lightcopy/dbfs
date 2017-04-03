@@ -1,0 +1,147 @@
+package com.github.lightcopy;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Properties;
+
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.lightcopy.conf.AppConf;
+
+/** Simple development server for frontend */
+public class TestServer {
+  private static final Logger LOG = LoggerFactory.getLogger(TestServer.class);
+
+  private final String scheme;
+  private final String host;
+  private final int port;
+  private final HttpServer server;
+  private ArrayList<Runnable> events;
+  private AppConf conf;
+
+  /**
+   * Application context.
+   * Only manual lookup is enabled, provider discovery is disabled.
+   */
+  static class ApplicationContext extends ResourceConfig {
+    public ApplicationContext() {
+      register(ContextProvider.class);
+      property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+    }
+  }
+
+  /**
+   * Shutdown hook to gracefully stop web server.
+   */
+  static class ServerShutdown implements Runnable {
+    private final TestServer server;
+
+    ServerShutdown(TestServer server) {
+      this.server = server;
+    }
+
+    @Override
+    public void run() {
+      this.server.shutdown();
+    }
+
+    @Override
+    public String toString() {
+      return "ServerShutdown" + this.server;
+    }
+  }
+
+  public TestServer(Properties props) {
+    this.conf = new AppConf(props);
+    this.scheme = this.conf.scheme();
+    this.host = this.conf.httpHost();
+    this.port = this.conf.httpPort();
+    // initialize events list and internal server
+    this.events = new ArrayList<Runnable>();
+    this.server = createHttpServer();
+  }
+
+  /** Create endpoint uri from initialized properties */
+  protected URI createEndpoint() {
+    return UriBuilder.fromPath("")
+      .scheme(this.scheme)
+      .host(this.host)
+      .port(this.port)
+      .build();
+  }
+
+  /** Create http server from initialized properties */
+  protected HttpServer createHttpServer() {
+    URI endpoint = createEndpoint();
+    ApplicationContext context = new ApplicationContext();
+    return GrizzlyHttpServerFactory.createHttpServer(endpoint, context);
+  }
+
+  /**
+   * Shutdown server. This should not be used directly, instead call launch() method. It will
+   * add shutdown hook to gracefully stop server.
+   */
+  protected void shutdown() {
+    LOG.info("Stop server {}", this);
+    this.server.shutdown();
+  }
+
+  /** Get current host */
+  public String getHost() {
+    return this.host;
+  }
+
+  /** Get current port */
+  public int getPort() {
+    return this.port;
+  }
+
+  /**
+   * Register shutdown hook to call when server is about to be stopped. These events are always
+   * called before server shutdown.
+   */
+  public void registerShutdownHook(Runnable event) {
+    this.events.add(event);
+  }
+
+  /**
+   * Start web server using provided options. As part of initialization registers all shutdown
+   * hooks, including one for the server.
+   */
+  public void launch() throws IOException, InterruptedException {
+    // register shutdown hook for server after all events
+    registerShutdownHook(new ServerShutdown(this));
+    for (Runnable event : this.events) {
+      LOG.info("Register shutdown event {}", event);
+      Runtime.getRuntime().addShutdownHook(new Thread(event));
+    }
+    LOG.info("Start server {}", this);
+    this.server.start();
+  }
+
+  @Override
+  public String toString() {
+    return "[" + createEndpoint() + "]";
+  }
+
+  public static void main(String[] args) {
+    try {
+      LOG.info("Initialize web server");
+      TestServer server = new TestServer(System.getProperties());
+      LOG.info("Created dbfs {}", server);
+      server.launch();
+    } catch (Exception err) {
+      LOG.error("Exception occurred", err);
+      System.exit(1);
+    }
+  }
+}
