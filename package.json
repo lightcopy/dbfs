@@ -1,0 +1,26 @@
+{
+  "name": "dbfs",
+  "author": "Ivan Sadikov",
+  "license": "Apache-2.0",
+  "scripts": {
+    "setup": "if [ ! -d \"target/scala-2.11/classes/static\" ]; then mkdir -p target/scala-2.11/classes/static; fi",
+    "copy_favicon": "cp web/favicon.ico target/scala-2.11/classes/static/",
+    "copy_html": "cp web/views/index.html target/scala-2.11/classes/static/",
+    "compile_sass": "node-sass web/scss/index.scss --include-path node_modules --output-style compressed target/scala-2.11/classes/static/index.min.css",
+    "compile_coffee": "browserify -t [coffeeify --no-header -c] --extension='.coffee' web/coffee/*.coffee | uglifyjs - -o target/scala-2.11/classes/static/index.min.js -c -m",
+    "compile": "npm run compile_sass && npm run compile_coffee",
+    "lint": "coffeelint -f coffeelint.json web/coffee && coffeelint -f coffeelint.json web/spec",
+    "test": "jasmine-node --coffee web/spec",
+    "build": "npm run lint && npm run compile && npm run copy_favicon && npm run copy_html",
+    "publish": "npm run setup && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.12.4",
+    "node-sass": "^4.5.2",
+    "uglify-js": "^2.8.21",
+    "coffeelint": "1.16.0",
+    "jasmine-node": "^1.14.5",
+    "browserify": "^14.1.0",
+    "coffeeify": "^2.1.0"
+  }
+}

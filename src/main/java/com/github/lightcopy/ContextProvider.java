@@ -11,7 +11,8 @@ import javax.ws.rs.core.Response;
 public class ContextProvider {
   private static final String INDEX_FAVICON_PATH = "static/favicon.ico";
   private static final String INDEX_CSS_PATH = "static/index.min.css";
-  private static final String INDEX_HTML_PATH = "index.html";
+  private static final String INDEX_JS_PATH = "static/index.min.js";
+  private static final String INDEX_HTML_PATH = "static/index.html";
 
   @GET
   @Path(INDEX_FAVICON_PATH)
@@ -27,6 +28,14 @@ public class ContextProvider {
   public Response getIndexCSS() {
     InputStream css = this.getClass().getClassLoader().getResourceAsStream(INDEX_CSS_PATH);
     return Response.ok(css).build();
+  }
+
+  @GET
+  @Path(INDEX_JS_PATH)
+  @Produces("text/javascript")
+  public Response getIndexJS() {
+    InputStream js = this.getClass().getClassLoader().getResourceAsStream(INDEX_JS_PATH);
+    return Response.ok(js).build();
   }
 
   @GET
