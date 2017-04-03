@@ -1,6 +1,11 @@
 {
   "name": "dbfs",
   "author": "Ivan Sadikov",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lightcopy/dbfs.git"
+  },
+  "description": "dbfs",
   "license": "Apache-2.0",
   "scripts": {
     "setup": "if [ ! -d \"target/scala-2.11/classes/static\" ]; then mkdir -p target/scala-2.11/classes/static; fi",
@@ -14,6 +19,11 @@
     "test": "jasmine-node --coffee web/spec",
     "build": "npm run lint && npm run compile && npm run copy_favicon && npm run copy_html && npm run copy_logo",
     "publish": "npm run setup && npm run test && npm run build"
+  },
+  "dependencies": {
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "mongodb": "^2.2.25"
   },
   "devDependencies": {
     "coffee-script": "^1.12.4",
