@@ -14,16 +14,16 @@ public class ContextProvider {
   private static final String INDEX_FAVICON_PATH = "static/favicon.ico";
   private static final String INDEX_LOGO_PATH = "static/logo.png";
   // css files
-  private static final String INDEX_CSS_PATH = "static/{css}.css";
-  // font resources
-  private static final String INDEX_TTF_PATH = "static/{ttf}.ttf";
-  private static final String INDEX_WOFF_PATH = "static/{woff}.woff";
-  private static final String INDEX_EOT_PATH = "static/{eot}.eot";
-  private static final String INDEX_SVG_PATH = "static/{svg}.svg";
+  private static final String INDEX_CSS_PATH = "static/index.min.css";
   // javascript
   private static final String INDEX_JS_PATH = "static/index.min.js";
   // html
   private static final String INDEX_HTML_PATH = "static/index.html";
+  // various font resources
+  private static final String OCTICONS_TTF_PATH = "static/octicons.ttf";
+  private static final String OCTICONS_WOFF_PATH = "static/octicons.woff";
+  private static final String OCTICONS_EOT_PATH = "static/octicons.eot";
+  private static final String OCTICONS_SVG_PATH = "static/octicons.svg";
 
   @GET
   @Path(INDEX_FAVICON_PATH)
@@ -44,45 +44,8 @@ public class ContextProvider {
   @GET
   @Path(INDEX_CSS_PATH)
   @Produces("text/css")
-  public Response getIndexCSS(@PathParam("css") String css) {
-    String filepath = INDEX_CSS_PATH.replace("{css}", css);
-    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(filepath);
-    return Response.ok(stream).build();
-  }
-
-  @GET
-  @Path(INDEX_TTF_PATH)
-  @Produces("application/octet-stream")
-  public Response getIndexTTF(@PathParam("ttf") String ttf) {
-    String filepath = INDEX_TTF_PATH.replace("{ttf}", ttf);
-    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(filepath);
-    return Response.ok(stream).build();
-  }
-
-  @GET
-  @Path(INDEX_WOFF_PATH)
-  @Produces("application/octet-stream")
-  public Response getIndexWOFF(@PathParam("woff") String woff) {
-    String filepath = INDEX_WOFF_PATH.replace("{woff}", woff);
-    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(filepath);
-    return Response.ok(stream).build();
-  }
-
-  @GET
-  @Path(INDEX_EOT_PATH)
-  @Produces("application/octet-stream")
-  public Response getIndexEOT(@PathParam("eot") String eot) {
-    String filepath = INDEX_EOT_PATH.replace("{eot}", eot);
-    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(filepath);
-    return Response.ok(stream).build();
-  }
-
-  @GET
-  @Path(INDEX_SVG_PATH)
-  @Produces("image/svg+xml")
-  public Response getIndexSVG(@PathParam("svg") String svg) {
-    String filepath = INDEX_EOT_PATH.replace("{svg}", svg);
-    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(filepath);
+  public Response getIndexCSS() {
+    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(INDEX_CSS_PATH);
     return Response.ok(stream).build();
   }
 
@@ -99,5 +62,37 @@ public class ContextProvider {
   public Response getIndex() {
     InputStream index = this.getClass().getClassLoader().getResourceAsStream(INDEX_HTML_PATH);
     return Response.ok(index).build();
+  }
+
+  @GET
+  @Path(OCTICONS_TTF_PATH)
+  @Produces("application/octet-stream")
+  public Response getOcticonsTTF() {
+    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(OCTICONS_TTF_PATH);
+    return Response.ok(stream).build();
+  }
+
+  @GET
+  @Path(OCTICONS_WOFF_PATH)
+  @Produces("application/octet-stream")
+  public Response getOcticonsWOFF() {
+    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(OCTICONS_WOFF_PATH);
+    return Response.ok(stream).build();
+  }
+
+  @GET
+  @Path(OCTICONS_EOT_PATH)
+  @Produces("application/octet-stream")
+  public Response getOcticonsEOT() {
+    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(OCTICONS_EOT_PATH);
+    return Response.ok(stream).build();
+  }
+
+  @GET
+  @Path(OCTICONS_SVG_PATH)
+  @Produces("image/svg+xml")
+  public Response getOcticonsSVG(@PathParam("svg") String svg) {
+    InputStream stream = this.getClass().getClassLoader().getResourceAsStream(OCTICONS_SVG_PATH);
+    return Response.ok(stream).build();
   }
 }
