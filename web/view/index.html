@@ -23,18 +23,22 @@
     </header>
     <div id="view" class="page large margin-bottom container">
       <!-- generic container for application -->
-      <div class="columns">
-        <!-- file system view -->
-        <div class="three-fourths column">
+      <div class="small margin-bottom columns">
+        <div class="single-column">
           <div class="text-large breadcrumb">
             <a href="#" class="section"><span class="octicon octicon-repo"></span></a>
             <div class="separator">/</div>
-            <a href="#" class="section">path</a>
+            <a href="#" class="section">usr</a>
             <div class="separator">/</div>
-            <a href="#" class="section">to</a>
+            <a href="#" class="section">local</a>
             <div class="separator">/</div>
-            <div href="#" class="active section">folder</div>
+            <div href="#" class="active section">bin</div>
           </div>
+        </div>
+      </div>
+      <div class="columns">
+        <!-- file system view -->
+        <div class="three-fourths column">
           <div class="top attached blue bordered segment">
             <!-- header -->
             <div class="columns">
@@ -124,10 +128,37 @@
               </div>
             </div>
           </div>
+          <!-- viewing utils -->
+          <div class="segment">
+            <a href="#">
+              <span class="octicon octicon-arrow-left"></span>
+              <span>Previous 100 files</span>
+            </a>
+            <span>...</span>
+            <a href="#">
+              <span>Next 100 files</span>
+              <span class="octicon octicon-arrow-right"></span>
+            </a>
+          </div>
         </div>
         <!-- Detailed information view -->
         <div class="one-fourth column">
-          <div class="clean-background blankslate">
+          <ul class="filter-list">
+            <li class="selected filter-item">
+              <span>Directories</span>
+              <span class="count">2</span>
+            </li>
+            <li class="filter-item">
+              <span>Files</span>
+              <span class="count">2</span>
+            </li>
+            <li class="filter-item">
+              <span>Symlinks</span>
+              <span class="count">1</span>
+            </li>
+          </ul>
+          <div class="divider"></div>
+          <div class="blankslate">
             <div class="mega-octicon octicon-eye"></div>
             <h1>Details</h1>
             <p>To view detailed info select item on the left</p>
