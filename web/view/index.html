@@ -18,11 +18,122 @@
       <div class="container">
         <nav class="masthead-nav">
           <img src="/static/logo.png" alt="dbfs" height="57" width="72" />
-          <span class="text-emphasized">DBFS</span>
         </nav>
       </div>
     </header>
     <div id="view" class="page large margin-bottom container">
+      <!-- generic container for application -->
+      <div class="columns">
+        <!-- file system view -->
+        <div class="three-fourths column">
+          <div class="text-large breadcrumb">
+            <a href="#" class="section"><span class="octicon octicon-repo"></span></a>
+            <div class="separator">/</div>
+            <a href="#" class="section">path</a>
+            <div class="separator">/</div>
+            <a href="#" class="section">to</a>
+            <div class="separator">/</div>
+            <div href="#" class="active section">folder</div>
+          </div>
+          <div class="top attached blue bordered segment">
+            <!-- header -->
+            <div class="columns">
+              <div class="three-fifths column">
+                <span class="text-emphasized">NAME</span>
+              </div>
+              <div class="one-fifth column">
+                <span class="text-emphasized">MODIFIED</span>
+              </div>
+              <div class="one-fifth column">
+                <span class="text-emphasized">PERMISSIONS</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row -->
+          <div class="attached segment">
+            <div class="columns">
+              <div class="three-fifths column">
+                <span class="octicon octicon-file-directory text-mute"></span>
+                <a href="#">Folder</a>
+              </div>
+              <div class="one-fifth column">
+                <span>2017-01-01 14:30:01</span>
+              </div>
+              <div class="one-fifth column">
+                <span>rwxrwxrwx</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row -->
+          <div class="attached tertiary segment">
+            <div class="columns">
+              <div class="three-fifths column">
+                <span class="octicon octicon-file-directory text-mute"></span>
+                <a href="#">Folder 2</a>
+              </div>
+              <div class="one-fifth column">
+                <span>2017-03-14 13:32:00</span>
+              </div>
+              <div class="one-fifth column">
+                <span>rwxrwxrwx</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row -->
+          <div class="attached secondary segment">
+            <div class="columns">
+              <div class="three-fifths column">
+                <span class="octicon octicon-file-text text-mute"></span>
+                <a href="#">run-all.sh</a>
+              </div>
+              <div class="one-fifth column">
+                <span>2017-02-01 15:24:15</span>
+              </div>
+              <div class="one-fifth column">
+                <span>rw-rw-r--</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row -->
+          <div class="attached segment">
+            <div class="columns">
+              <div class="three-fifths column">
+                <span class="octicon octicon-file-text text-mute"></span>
+                <a href="#">file.txt</a>
+              </div>
+              <div class="one-fifth column">
+                <span>2017-02-01 15:00:15</span>
+              </div>
+              <div class="one-fifth column">
+                <span>rw-rw-r--</span>
+              </div>
+            </div>
+          </div>
+          <!-- Row -->
+          <div class="bottom attached segment">
+            <div class="columns">
+              <div class="three-fifths column">
+                <span class="octicon octicon-file-symlink-file text-mute"></span>
+                <a href="#">symlink</a>
+              </div>
+              <div class="one-fifth column">
+                <span>2017-02-02 00:20:45</span>
+              </div>
+              <div class="one-fifth column">
+                <span>rwxrwxr-x</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Detailed information view -->
+        <div class="one-fourth column">
+          <div class="clean-background blankslate">
+            <div class="mega-octicon octicon-eye"></div>
+            <h1>Details</h1>
+            <p>To view detailed info select item on the left</p>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="text/javascript" src="/static/index.min.js"></script>
   </body>
