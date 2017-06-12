@@ -39,6 +39,9 @@ public class ApplicationContext extends ResourceConfig {
     private static final String INDEX_LOGO_PATH = "logo.png";
     // html
     private static final String INDEX_HTML_PATH = "index.html";
+    // css paths
+    private static final String NORMALIZE_CSS = "normalize.css";
+    private static final String BLUEPRINT_CSS = "blueprint.css";
 
     @Context
     Configuration config;
@@ -48,9 +51,13 @@ public class ApplicationContext extends ResourceConfig {
       return new File((String) config.getProperty(AppConf.WORKING_DIRECTORY));
     }
 
-    /** Get static directory with custom resources */
-    private File staticDirectory() {
-      return new File(workingDirectory(), "static");
+    /** Build resource path to components */
+    private File dir(String... children) {
+      File path = workingDirectory();
+      for (String component : children) {
+        path = new File(path, component);
+      }
+      return path;
     }
 
     /** Open file path and return input stream */
@@ -66,7 +73,7 @@ public class ApplicationContext extends ResourceConfig {
     @Path(INDEX_FAVICON_PATH)
     @Produces("image/x-icon")
     public Response getFavicon() {
-      InputStream icon = open(new File(staticDirectory(), INDEX_FAVICON_PATH));
+      InputStream icon = open(dir("static", INDEX_FAVICON_PATH));
       return Response.ok(icon).build();
     }
 
@@ -74,15 +81,32 @@ public class ApplicationContext extends ResourceConfig {
     @Path(INDEX_LOGO_PATH)
     @Produces("image/png")
     public Response getLogo() {
-      InputStream logo = open(new File(staticDirectory(), INDEX_LOGO_PATH));
+      InputStream logo = open(dir("static", INDEX_LOGO_PATH));
       return Response.ok(logo).build();
     }
 
     @GET
     @Produces("text/html")
     public Response getIndex() {
-      InputStream index = open(new File(staticDirectory(), INDEX_HTML_PATH));
+      InputStream index = open(dir("static", INDEX_HTML_PATH));
       return Response.ok(index).build();
+    }
+
+    @GET
+    @Path(NORMALIZE_CSS)
+    @Produces("text/css")
+    public Response getNormalizeCSS() {
+      InputStream normalize = open(dir("node_modules", "normalize.css", NORMALIZE_CSS));
+      return Response.ok(normalize).build();
+    }
+
+    @GET
+    @Path(BLUEPRINT_CSS)
+    @Produces("text/css")
+    public Response getBlueprintCSS() {
+      InputStream normalize = open(
+        dir("node_modules", "@blueprintjs", "core", "dist", BLUEPRINT_CSS));
+      return Response.ok(normalize).build();
     }
   }
 }
