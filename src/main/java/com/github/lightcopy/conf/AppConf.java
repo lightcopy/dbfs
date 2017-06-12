@@ -1,5 +1,7 @@
 package com.github.lightcopy.conf;
 
+import java.io.IOException;
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -31,6 +33,8 @@ public class AppConf {
   // MongoDB settings (connection string)
   public static final String MONGO_CONN_KEY = "mongo.address";
   public static final String MONGO_CONN_DEFAULT = "mongodb://localhost:27017";
+  // Working directory
+  public static final String WORKING_DIRECTORY = "working.directory";
 
   // Keep all keys above registered in the set, used to extract relevant entries from properties
   public static final HashSet<String> REGISTERED_KEYS = new HashSet<String>();
@@ -42,6 +46,7 @@ public class AppConf {
   }
 
   private ConcurrentHashMap<String, String> options;
+  private String workingDirectory;
 
   public AppConf(Properties props) {
     this.options = new ConcurrentHashMap<String, String>();
@@ -51,6 +56,12 @@ public class AppConf {
         LOG.debug("Insert entry " + key + "->" + value);
         options.put(key, value);
       }
+    }
+    // current working directory
+    try {
+      this.workingDirectory = new File(".").getCanonicalPath();
+    } catch (IOException err) {
+      throw new RuntimeException(err);
     }
   }
 
@@ -167,5 +178,9 @@ public class AppConf {
 
   public String mongoConnectionString() {
     return get(MONGO_CONN_KEY, MONGO_CONN_DEFAULT);
+  }
+
+  public String workingDirectory() {
+    return workingDirectory;
   }
 }

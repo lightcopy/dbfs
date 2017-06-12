@@ -19,3 +19,4 @@ project/plugins/project/
 
 # npm specific
 node_modules/
+static/
