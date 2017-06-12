@@ -12,7 +12,7 @@
     "copy_favicon": "cp web/favicon.ico static/",
     "copy_logo": "cp web/logo.png static/",
     "copy_html": "cp web/view/index.html static/",
-    "compile_coffee": "browserify -t [coffeeify --no-header -c] --extension='.coffee' web/coffee/*.coffee | uglifyjs - -o static/index.min.js -c -m",
+    "compile_coffee": "browserify -t [coffee --no-header -c] --extension='.coffee' web/coffee/*.coffee | uglifyjs - -o static/index.min.js -c -m",
     "compile": "npm run compile_coffee",
     "lint": "coffeelint -f coffeelint.json web/coffee && coffeelint -f coffeelint.json web/spec",
     "test": "jasmine-node --coffee web/spec",
@@ -20,8 +20,11 @@
     "publish": "npm run setup && npm run test && npm run build"
   },
   "dependencies": {
-    "react-addons-css-transition-group": "^15.0.1",
-    "@blueprintjs/core": "^1.19.0"
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "react-addons-css-transition-group": "^15.4.2",
+    "@blueprintjs/core": "^1.19.0",
+    "coffee-react": "^5.0.0"
   },
   "devDependencies": {
     "coffee-script": "^1.12.4",

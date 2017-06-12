@@ -104,9 +104,18 @@ public class ApplicationContext extends ResourceConfig {
     @Path(BLUEPRINT_CSS)
     @Produces("text/css")
     public Response getBlueprintCSS() {
-      InputStream normalize = open(
+      InputStream blueprint = open(
         dir("node_modules", "@blueprintjs", "core", "dist", BLUEPRINT_CSS));
-      return Response.ok(normalize).build();
+      return Response.ok(blueprint).build();
+    }
+
+    @GET
+    @Path("resources/icons/{path}")
+    @Produces("application/octet-stream")
+    public Response getBlueprintIcons(@PathParam("path") String path) {
+      InputStream icons = open(
+        dir("node_modules", "@blueprintjs", "core", "resources", "icons", path));
+      return Response.ok(icons).build();
     }
   }
 }
