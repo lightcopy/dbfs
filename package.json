@@ -12,26 +12,21 @@
     "copy_favicon": "cp web/favicon.ico static/",
     "copy_logo": "cp web/logo.png static/",
     "copy_html": "cp web/view/index.html static/",
-    "compile_coffee": "browserify -t [coffee --no-header -c] --extension='.coffee' web/coffee/*.coffee | uglifyjs - -o static/index.min.js -c -m",
-    "compile": "npm run compile_coffee",
-    "lint": "coffeelint -f coffeelint.json web/coffee && coffeelint -f coffeelint.json web/spec",
-    "test": "jasmine-node --coffee web/spec",
-    "build": "npm run lint && npm run compile && npm run copy_favicon && npm run copy_html && npm run copy_logo",
+    "qc": "browserify -t [ babelify --presets [ react ] ] web/js/* -o static/index.min.js",
+    "compile": "browserify -t [ babelify --presets [ react ] ] web/js/* | uglifyjs - -o static/index.min.js -c -m",
+    "build": "npm run compile && npm run copy_favicon && npm run copy_html && npm run copy_logo",
     "publish": "npm run setup && npm run test && npm run build"
   },
   "dependencies": {
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-addons-css-transition-group": "^15.4.2",
-    "@blueprintjs/core": "^1.19.0",
-    "coffee-react": "^5.0.0"
+    "@blueprintjs/core": "^1.19.0"
   },
   "devDependencies": {
-    "coffee-script": "^1.12.4",
     "uglify-js": "^2.8.21",
-    "coffeelint": "1.16.0",
-    "jasmine-node": "^1.14.5",
     "browserify": "^14.1.0",
-    "coffeeify": "^2.1.0"
+    "babelify": "7.3.0",
+    "babel-preset-react": "6.24.1"
   }
 }

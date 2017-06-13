@@ -42,6 +42,8 @@ public class ApplicationContext extends ResourceConfig {
     // css paths
     private static final String NORMALIZE_CSS = "normalize.css";
     private static final String BLUEPRINT_CSS = "blueprint.css";
+    // js paths
+    private static final String INDEX_JS_PATH = "index.min.js";
 
     @Context
     Configuration config;
@@ -116,6 +118,14 @@ public class ApplicationContext extends ResourceConfig {
       InputStream icons = open(
         dir("node_modules", "@blueprintjs", "core", "resources", "icons", path));
       return Response.ok(icons).build();
+    }
+
+    @GET
+    @Path(INDEX_JS_PATH)
+    @Produces("text/javascript")
+    public Response getIndexJS() {
+      InputStream js = open(dir("static", INDEX_JS_PATH));
+      return Response.ok(js).build();
     }
   }
 }
